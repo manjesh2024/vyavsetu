@@ -1,19 +1,26 @@
-# Prototype Test Report
+# Vyavsetu Demo Verification
 
-## Current checks completed
-- Fetched the latest `app.html` and `index.html` from the `main` branch through GitHub and checked their embedded JavaScript with a JavaScript parser; both passed.
-- Confirmed Developer Access is linked in the demo navigation and that its render function includes brand assets, colour-token cards, responsive-device guidance, flow diagrams, production invariants and a developer checklist.
-- Confirmed the selected brand set is committed under `assets/`: light/dark lockups, horizontal lockup, full-colour mark, monochrome marks and app-icon SVGs.
-- Confirmed handoff docs are present: `docs/DEVELOPER_HANDOFF.md`, `docs/ARCHITECTURE_FLOWCHARTS.md` and `docs/RESPONSIVE_DEVICE_MATRIX.md`.
-- Responsive demo provides Light, Dark, Ocean, Forest and High Contrast themes plus device viewport presets for desktop, laptop, store POS, tablet/iPad, Android and iPhone.
+## Validated by local/static checks
+- Current `app.html` embedded JavaScript parses successfully.
+- POS: per-item add/quantity controls, stock ceiling, subtotal/tax/total, empty-cart guards and provisional-bill creation/resume.
+- POS payment modes: Cash, Dummy UPI and Dummy Card.
+- Marketplace: shop browsing, per-item basket, one-shop-per-order rule, delivery name/phone/address validation and Cash on delivery / Dummy UPI / Dummy Card.
+- Payment simulation: approval, decline, and timeout/unknown reconciliation state.
+- Orders & receipts: browser-local order history, receipt detail, receipt print, JSON export.
 
-## Not yet verified
-- A full real-browser end-to-end test across physical devices has not been performed.
-- GitHub Pages is **not live yet**. Latest workflow reaches the Configure Pages step but fails because Pages has not been configured/allowed for this repository in GitHub settings.
-- Production integrations (authentication, database, payments, legal tax/invoicing, printer/cash-drawer hardware and server sync) are intentionally not implemented in this demo.
+## Dummy payment behaviour
+- POS Cash records a demo cash payment after the operator confirms the sale.
+- Dummy UPI/Card approval records a demo-only paid status with a `DUMMY-*` reference. No gateway is contacted and no money moves.
+- Marketplace Cash on delivery records a confirmed order which is not marked paid.
+- Decline creates no new order and leaves the basket unchanged.
+- Timeout/unknown creates a pending-reconciliation record and is not marked paid.
+- Receipt output is labelled demo-only, not a statutory tax invoice.
 
-## To publish the demo
-Open repository **Settings → Pages → Build and deployment → Source**, choose **GitHub Actions**, save, then rerun the latest workflow from the Actions tab. Verify that the deploy job succeeds before sharing the live URL.
+## Not production-ready
+- Cart/orders live only in this browser's localStorage.
+- No real API/database, authentication, server-side authorization, authoritative tax, legal invoice numbering, gateway/webhook, stock-sync, cross-device persistence or real printer driver is integrated.
+- Tax and delivery values are illustrative demo rules.
+- Physical-device end-to-end testing has not yet been performed.
 
-- [GitHub Actions workflow runs](https://github.com/manjesh2024/vyavsetu/actions)
-- [Pages repository settings](https://github.com/manjesh2024/vyavsetu/settings/pages)
+## CI
+GitHub Actions workflow `.github/workflows/test-demo.yml` runs embedded JavaScript syntax and static capability checks on pushes and pull requests.
