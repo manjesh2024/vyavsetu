@@ -12,8 +12,8 @@ Open `index.html` locally, or enable GitHub Pages in **Settings → Pages → Bu
 
 - Responsive layouts for desktop, laptop, store POS, tablet/iPad, Android and iPhone viewport previews.
 - Light, Dark, Ocean, Forest and High Contrast themes.
-- Demo surfaces for Business Admin, POS Terminal, Restaurant/KDS, Customer Marketplace, Driver App and SaaS Super Admin.
-- Functional browser-local demo interactions with sample data, including POS cart, marketplace cart, dummy payment checkout, receipt view/print, provisional bills and order history. No live gateway, backend sync, statutory invoicing or production authentication.
+- Demo surfaces: Overview, POS, Orders & Receipts, Products, Purchase Orders, Inventory, Suppliers, Customers, Returns/Refunds, Reports, Staff/Roles, Business Settings, Restaurant/KDS, Customer Marketplace, Driver App, SaaS Super Admin, Plans, Subscriptions, Support, Feature Flags and Developer Access.
+- Functional browser-local demo interactions: product/supplier/customer/staff/tenant/plan/support CRUD; purchase receiving; stock adjustments; POS/marketplace checkout; dummy payment outcomes; provisional bills; receipt print/export; KDS transitions; driver pickup/route/OTP delivery; return/refund simulation; and CSV/JSON reports. No live gateway, backend sync, statutory invoices or production authentication.
 
 ## Brand assets and developer handoff
 
@@ -58,3 +58,20 @@ See `BRAND.md` and `docs/` for brand notes and implementation phases.
 ## Production boundary
 
 The current checkout is client-side simulation only. Never use it for live commerce. Production requires server-authoritative pricing/tax, authentication/authorization, durable database transactions, idempotency, payment provider/webhooks, legal invoice numbering, stock concurrency policy, printing integration and offline sync.
+
+
+## POSPro-style module coverage
+
+The [POSPro documentation](https://doc.pospro.app/) groups the product into Super Admin workflows (businesses, categories, plans, subscriptions, staff, reports, roles/permissions and settings) and business workflows (sales, purchases, products, stock, customers, suppliers, tax, accounts and reports). Vyavsetu's demo models comparable module flows while retaining the restaurant, customer marketplace and driver surfaces.
+
+### Try the core flows
+
+1. POS: Products → add items → POS → adjust quantities → Continue to payment → choose Cash, Dummy UPI or Dummy Card.
+2. Payment tests: choose Approved, Declined, or Timeout/Unknown. Declined preserves the basket; timeout becomes pending reconciliation; approved creates a demo receipt.
+3. Purchasing: Purchase Orders → create draft → mark ordered → receive goods. Check Products and Inventory to see the stock change.
+4. Marketplace: Customer App → add items → checkout. The order appears in Orders, creates a driver job and (for restaurant-style stores) a kitchen ticket. Driver status transitions update the order status.
+5. Admin: Customers, Suppliers, Returns, Staff, Plans, Subscriptions, Support and Feature Flags have working local demo actions.
+
+## Data and safety boundary
+
+This is a functional local demo, not a production commerce platform. Records persist in this browser's localStorage; other devices and browsers do not share state. Dummy card/UPI never calls a gateway or moves funds. Tax and delivery values are configurable examples, not legal tax advice. Production still requires a server/database, authentication and tenant authorization, payment webhooks/idempotency, legal invoice numbering, printer drivers, offline sync, concurrency controls and real-device end-to-end testing.
