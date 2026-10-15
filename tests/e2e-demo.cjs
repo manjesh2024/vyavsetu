@@ -26,7 +26,7 @@ const { chromium } = require('playwright');
     // POS product controls are the supported click targets, not the decorative card.
     await go('pos');
     const initialStockLabel = await app.locator('[data-pos-product][data-pos-id="bowl"] .tag').textContent();
-    const posStockBefore = Number(initialStockLabel.match(/\\d+/)?.[0]);
+    const posStockBefore = Number.parseInt(initialStockLabel, 10);
     const bowlCard = app.locator('[data-pos-product][data-pos-id="bowl"]');
     await bowlCard.locator('.art').click();
     assert.equal(await bowlCard.locator('[data-pos-qty="bowl"]').count(), 2,
