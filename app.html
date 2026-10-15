@@ -196,7 +196,7 @@ function filterRows(){let q=(document.getElementById('stockSearch')?.value||'').
 document.getElementById('nav').addEventListener('click',e=>{const b=e.target.closest('button[data-page]');if(b)go(b.dataset.page)});
 document.addEventListener('click',e=>{
 const b=e.target.closest('button');if(!b)return;
-if(b.matches('[data-header-action]')){const a=b.dataset.headerAction;if(a==='start-sale'){go('pos');return}if(a==='checkout-pos'){beginCheckout('pos');return}if(a==='export-orders'){downloadOrders();return}if(a==='new-kitchen-ticket'){openNewKitchenTicket();return}if(a==='receive-stock'){openStockDialog(null,'receive');return}if(a==='checkout-market'){beginCheckout('market');return}if(a==='toggle-driver'){toggleDriver();return}if(a==='add-tenant'){openTenantDialog();return}if(a==='open-handoff'){downloadDeveloperHandoff();return}}
+if(b.matches('[data-header-action]')){const a=b.dataset.headerAction;if(a==='start-sale'){go('pos');return}if(a==='checkout-pos'){beginCheckout('pos');return}if(a==='export-orders'){downloadOrders();return}if(a==='new-kitchen-ticket'){openNewKitchenTicket();return}if(a==='receive-stock'){openStockDialog(null,'receive');return}if(a==='checkout-market'){beginCheckout('market');return}if(a==='toggle-driver'){toggleDriver();return}if(a==='add-tenant'){openTenantDialog();return}if(a==='open-handoff'){window.open('docs/DEVELOPER_HANDOFF.md','_blank','noopener');return}}
 if(b.matches('[data-go]')){go(b.dataset.go);return}
 if(b.matches('[data-colour]')){GenCopy(b.dataset.colour);return}
 if(b.matches('[data-toast]')){toast(b.dataset.toast);return}
