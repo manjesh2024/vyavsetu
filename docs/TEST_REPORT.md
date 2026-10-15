@@ -1,26 +1,35 @@
 # Vyavsetu Demo Verification
 
-## Validated by local/static checks
-- Current `app.html` embedded JavaScript parses successfully.
-- POS: per-item add/quantity controls, stock ceiling, subtotal/tax/total, empty-cart guards and provisional-bill creation/resume.
-- POS payment modes: Cash, Dummy UPI and Dummy Card.
-- Marketplace: shop browsing, per-item basket, one-shop-per-order rule, delivery name/phone/address validation and Cash on delivery / Dummy UPI / Dummy Card.
-- Payment simulation: approval, decline, and timeout/unknown reconciliation state.
-- Orders & receipts: browser-local order history, receipt detail, receipt print, JSON export.
+## Automated checks
+GitHub Actions checks the embedded JavaScript syntax and validates expected feature hooks in app.html. Latest CI result is available from the Actions page.
 
-## Dummy payment behaviour
-- POS Cash records a demo cash payment after the operator confirms the sale.
-- Dummy UPI/Card approval records a demo-only paid status with a `DUMMY-*` reference. No gateway is contacted and no money moves.
-- Marketplace Cash on delivery records a confirmed order which is not marked paid.
-- Decline creates no new order and leaves the basket unchanged.
-- Timeout/unknown creates a pending-reconciliation record and is not marked paid.
-- Receipt output is labelled demo-only, not a statutory tax invoice.
+## Interactions covered by the prototype
+- POS: product add/quantity controls, stock guard, illustrative total calculation, Cash/Dummy UPI/Dummy Card, provisional bill save/resume, clear cart.
+- Dummy payment: Approved, Declined and Timeout/Unknown results; decline preserves basket, timeout remains pending reconciliation, approved demo checkout creates a receipt.
+- Orders & receipts: local history, details, receipt printing, JSON orders export and CSV sales export.
+- Product catalogue: create/edit/search/delete with active-cart guard.
+- Purchase orders: create draft, mark ordered and receive; receiving increments the POS product and inventory SKU.
+- Inventory: receive/adjust stock and save local stock history.
+- Suppliers and customers: create/edit/delete local records; checkout also saves marketplace customer contact details.
+- Restaurant KDS: create tickets; move New → Preparing → Ready → Served.
+- Customer marketplace: browse three sample stores, manage quantities, one-store-per-order rule, validate customer name/phone/address and checkout using COD or dummy UPI/card.
+- Driver: online/offline toggle, accept job, pickup, start route, OTP-confirmed delivery and status history. Marketplace checkout creates driver jobs and restaurant-style kitchen tickets.
+- Returns/refunds: create request against a paid POS demo sale; approve/reject; optional restock and demo refund reference.
+- Reports: sales summary, best-selling items, CSV/JSON export.
+- Staff/roles, business settings, SaaS plans/subscriptions, tenants, support tickets and feature flags: browser-local create/update/toggle workflows.
+- Developer Access: brand tokens, responsive guidance, implementation checklist and architecture/business flowcharts.
+- Responsive launcher: auto, desktop, laptop, store POS, tablet/iPad, Android and iPhone viewport presets; Light, Dark, Ocean, Forest and High Contrast themes.
 
-## Not production-ready
-- Cart/orders live only in this browser's localStorage.
-- No real API/database, authentication, server-side authorization, authoritative tax, legal invoice numbering, gateway/webhook, stock-sync, cross-device persistence or real printer driver is integrated.
-- Tax and delivery values are illustrative demo rules.
-- Physical-device end-to-end testing has not yet been performed.
+## Dummy payment semantics
+- POS Cash records a demo paid sale only after confirmation.
+- Dummy UPI/Card writes a local demo status and DUMMY reference; no gateway is called and no money moves.
+- Marketplace COD creates a confirmed order but does not mark it paid.
+- Decline creates no order and preserves the cart.
+- Timeout/unknown creates a pending-reconciliation record, not a paid order. A real payment integration must reconcile uncertain outcomes before retry.
+- Receipts are labelled demo-only and are not statutory tax invoices.
 
-## CI
-GitHub Actions workflow `.github/workflows/test-demo.yml` runs embedded JavaScript syntax and static capability checks on pushes and pull requests.
+## Confirmed limitations
+- Data persists in the current browser's localStorage only; separate devices and browsers do not share changes.
+- No server/API/database, actual authentication/authorization, payment gateway/webhook, statutory tax engine/invoice numbering, physical printer, or cross-device offline sync is connected.
+- Tax, delivery, demo OTP and subscription data are illustrative.
+- Syntax and CI/static checks pass; full interactive browser tests on real devices have not been run. Never use this prototype for live sales or real customer data.
