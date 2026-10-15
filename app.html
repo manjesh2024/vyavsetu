@@ -342,9 +342,9 @@ if(b.matches('[data-stock-receive]')){openStockDialog(b.dataset.stockReceive,'re
 if(b.matches('[data-stock-adjust]')){openStockDialog(b.dataset.stockAdjust,'adjust');return}
 if(b.matches('[data-action="receive-stock"]')){openStockDialog(null,'receive');return}
 if(b.matches('[data-action="save-stock"]')){saveStock(b.dataset.stockId,b.dataset.stockMode);return}
-if(b.matches('[data-driver-id]')){advanceDriver(b.dataset.driverId,b.dataset.driverAction);return}
-if(b.matches('[data-action="toggle-driver"]')){toggleDriver();return}
 if(b.matches('[data-action="confirm-delivery"]')){completeDriverDelivery(b.dataset.driverId);return}
+if(b.matches('[data-action="toggle-driver"]')){toggleDriver();return}
+if(b.matches('[data-driver-action][data-driver-id]')){advanceDriver(b.dataset.driverId,b.dataset.driverAction);return}
 if(b.matches('[data-action="add-tenant"]')){openTenantDialog();return}
 if(b.matches('[data-action="save-tenant"]')){saveTenantRecord();return}
 if(b.matches('[data-action="checkout-pos"]')){beginCheckout('pos');return}
