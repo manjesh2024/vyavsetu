@@ -185,6 +185,39 @@ const { chromium } = require('playwright');
     await app.locator('[data-action="save-product"]').click();
     await app.getByText('E2E Sample Product', { exact: true }).first().waitFor();
 
+    // Verify the restaurant ticket lifecycle.
+    await go('restaurant');
+    await app.locator('[data-action="new-kitchen-ticket"]').click();
+    await app.locator('#kdsTitle').fill('E2E Kitchen Ticket');
+    await app.locator('#kdsItems').fill('2 test bowls');
+    await app.locator('#kdsSource').selectOption('Delivery');
+    await app.locator('[data-action="save-kitchen-ticket"]').click();
+    let kdsCard = app.locator('.ticket-card').filter({ hasText: 'E2E Kitchen Ticket' });
+    assert.equal((await kdsCard.locator('.tag').textContent()).trim(), 'New');
+    for (const expected of ['Preparing', 'Ready', 'Served']) {
+      await kdsCard.locator('[data-kds-advance]').click();
+      kdsCard = app.locator('.ticket-card').filter({ hasText: 'E2E Kitchen Ticket' });
+      assert.equal((await kdsCard.locator('.tag').textContent()).trim(), expected);
+    }
+
+    // Verify an inventory adjustment updates stock and records history.
+    await go('inventory');
+    const stockRow = app.locator('[data-stock-row]').filter({ hasText: 'COF-014' });
+    const before = Number.parseInt(await stockRow.locator('.tag').textContent(), 10);
+    await stockRow.locator('[data-stock-adjust="COF-014"]').click();
+    await app.locator('#stockQty').fill(String(before + 3));
+    await app.locator('#stockReason').selectOption({ label: 'Correction' });
+    await app.locator('[data-action="save-stock"]').click();
+    const result = await page.locator('#app').evaluate(frame => {
+      const s = frame.contentDocument.defaultView.localStorage;
+      return {
+        row: JSON.parse(s.getItem('vyavsetu_inventory_items') || '[]').find(x => x.id === 'COF-014'),
+        history: JSON.parse(s.getItem('vyavsetu_stock_history') || '[]')
+      };
+    });
+    assert.equal(result.row.stock, before + 3);
+    assert.ok(result.history.some(x => x.id === 'COF-014' && x.mode === 'adjust'));
+
     for (const name of ['overview','pos','orders','products','purchases','inventory','suppliers','customers','returns','reports','staff','settings','restaurant','market','driver','admin','plans','subscriptions','support','features','developer']) {
       await go(name);
       assert.ok(await app.locator('main h1').count(), 'Missing page heading: '+name);
