@@ -15,6 +15,19 @@ Open `index.html` locally, or enable GitHub Pages from **Settings → Pages → 
 - Demo surfaces for Business Admin, POS Terminal, Restaurant/KDS, Customer Marketplace, Driver App and SaaS Super Admin.
 - Sample data only; no live payments, backend synchronization, statutory invoicing, or production authentication.
 
+## Brand assets and developer handoff
+
+- [Light logo lockup](assets/vyavsetu-lockup-light.svg)
+- [Dark logo lockup](assets/vyavsetu-lockup-dark.svg)
+- [Horizontal logo](assets/vyavsetu-horizontal.svg)
+- [Primary mark](assets/vyavsetu-mark.svg)
+- [Logo asset usage guide](assets/README.md)
+- [Developer handoff specification](docs/DEVELOPER_HANDOFF.md)
+- [Architecture and business flowcharts](docs/ARCHITECTURE_FLOWCHARTS.md)
+- [Responsive device QA matrix](docs/RESPONSIVE_DEVICE_MATRIX.md)
+
+Open **Developer Access** from the in-demo navigation for a visual brand and flowchart reference.
+
 ## Brand direction
 
 - Name: Vyavsetu
