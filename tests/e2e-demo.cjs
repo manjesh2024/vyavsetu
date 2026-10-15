@@ -28,12 +28,13 @@ const { chromium } = require('playwright');
     const posStockBefore = await page.locator('#app').evaluate(frame =>
       JSON.parse(frame.contentDocument.defaultView.localStorage.getItem('vyavsetu_pos_products') || '[]')
         .find(product => product.id === 'bowl')?.stock);
-    await app.locator('[data-pos-product]').filter({ hasText: 'Garden bowl' })
-      .locator('[data-pos-add="bowl"]').click();
-    assert.equal(await app.locator('[data-pos-qty="bowl"]').count(), 2,
-      'Adding from the product card should render both quantity controls');
-    assert.match(await app.locator('main').innerText(), /Garden bowl/);
-    await app.locator('[data-pos-qty="bowl"][data-d="1"]').first().click();
+    const bowlCard = app.locator('[data-pos-product][data-pos-id="bowl"]');
+    await bowlCard.locator('.art').click();
+    assert.equal(await bowlCard.locator('[data-pos-qty="bowl"]').count(), 2,
+      'Clicking the product-card surface should add the item and show quantity controls');
+    assert.match(await app.locator('main').innerText(), /1 in cart/,
+      'Product-card click should update the cart display');
+    await bowlCard.locator('[data-pos-qty="bowl"][data-d="1"]').click();
     assert.match(await app.locator('main').innerText(), /2 in cart/,
       'Product quantity increment should update the POS cart display');
 
@@ -108,6 +109,23 @@ const { chromium } = require('playwright');
     });
     assert.ok(marketOrderId, 'Marketplace checkout should save an order ID');
 
+    // Same customer details on a different order must not inherit this delivery status.
+    await page.locator('#app').evaluate((frame) => {
+      const win = frame.contentWindow;
+      const key = 'vyavsetu_demo_orders';
+      const orders = JSON.parse(win.localStorage.getItem(key) || '[]');
+      orders.unshift({
+        id: 'VY-DUPLICATE-E2E', source: 'market', customer: 'E2E Demo Customer',
+        phone: '9876543210', address: '12 Demo Street, Noida',
+        lines: [], subtotal: 0, tax: 0, delivery: 0, total: 0,
+        method: 'Dummy UPI', status: 'Paid (dummy)',
+        deliveryStatus: 'Awaiting dispatch', created: new Date().toISOString()
+      });
+      win.localStorage.setItem(key, JSON.stringify(orders));
+      win.location.reload();
+    });
+    await app.locator('#nav').waitFor();
+
     // 5. Driver transitions should remain linked to this exact order ID.
     await go('driver');
     let deliveryCard = app.locator('.delivery-card').filter({ hasText: marketOrderId });
@@ -140,6 +158,12 @@ const { chromium } = require('playwright');
       'Exact order record should save Delivered');
     assert.equal(deliveryDiagnostics.matchingJobs.length, 1,
       'A checkout should create exactly one driver job keyed by order ID');
+    const unrelatedCustomerOrder = app.locator('.order-row').filter({ hasText: 'VY-DUPLICATE-E2E' });
+    await unrelatedCustomerOrder.waitFor();
+    assert.ok((await unrelatedCustomerOrder.innerText()).includes('Awaiting dispatch'),
+      'A separate order with matching customer details must not inherit Delivered status');
+    assert.ok(!(await unrelatedCustomerOrder.innerText()).includes('Delivered'),
+      'Driver status should never leak between orders sharing customer details');
 
     // 7. Purchase receiving creates or updates a stock record.
     await go('purchases');
