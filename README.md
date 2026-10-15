@@ -6,7 +6,7 @@ Vyavsetu is a responsive product prototype for a connected business platform spa
 
 ## Demo
 
-Open `index.html` locally, or enable GitHub Pages from **Settings → Pages → Deploy from a branch → main / (root)**.
+Open `index.html` locally, or enable GitHub Pages in **Settings → Pages → Build and deployment → Source → GitHub Actions**. Then rerun the workflow in the Actions tab.
 
 ## Prototype features
 
