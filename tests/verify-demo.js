@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const assert = require('node:assert/strict');
 
 const html = fs.readFileSync('app.html', 'utf8');
-const scripts = [...html.matchAll(/<script>([\\s\\S]*?)<\\/script>/gi)].map(m => m[1]);
+const scripts = html.split('<script>').slice(1).map(part => part.split('</script>')[0]);
 assert.ok(scripts.length, 'app.html should contain an application script');
 for (const [i, script] of scripts.entries()) {
   try { new Function(script); }
@@ -11,18 +11,18 @@ for (const [i, script] of scripts.entries()) {
 const required = [
   ['POS per-item add', 'function addPos(id)'],
   ['POS quantity controls', 'function qtyPos(id,d)'],
-  ['POS checkout', "beginCheckout('pos')"],
-  ['Marketplace checkout', "beginCheckout('market')"],
+  ['POS checkout entry', "beginCheckout('pos')"],
+  ['Marketplace checkout entry', "beginCheckout('market')"],
   ['Pending reconciliation state', 'Payment pending reconciliation'],
   ['Dummy decline flow', "result==='declined'"],
   ['Dummy timeout flow', "result==='unknown'"],
-  ['Cash on delivery not paid', 'Confirmed · collect on delivery'],
-  ['Order history', 'function orders()'],
+  ['Cash on delivery unpaid status', 'Confirmed · collect on delivery'],
+  ['Order history screen', 'function orders()'],
   ['Provisional bill save', 'function saveProvisionalBill()'],
   ['Provisional bill resume', 'function resumeBill(id)'],
-  ['Receipt print', 'function printDemoReceipt()'],
-  ['Export orders', 'function downloadOrders()'],
-  ['No real payment connection disclaimer', 'No card, UPI or bank connection']
+  ['Receipt printing', 'function printDemoReceipt()'],
+  ['Orders export', 'function downloadOrders()'],
+  ['Dummy payment disclaimer', 'No card, UPI or bank connection']
 ];
 for (const [label, needle] of required) {
   assert.ok(html.includes(needle), 'Missing expected demo capability: ' + label);
