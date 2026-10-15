@@ -1,0 +1,32 @@
+name: Browser E2E demo flows
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: npm install --no-save playwright
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Start local static server
+        run: |
+          python3 -m http.server 8000 > /tmp/vyavsetu-http.log 2>&1 &
+          for i in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:8000/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/vyavsetu-http.log
+          exit 1
+      - name: Test core customer/POS/driver workflows
+        run: node tests/e2e-demo.cjs
