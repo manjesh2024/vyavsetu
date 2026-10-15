@@ -87,7 +87,7 @@ const { chromium } = require('playwright');
     assert.ok(timeoutState.order, 'Timeout should persist a pending reconciliation order');
     assert.notEqual(timeoutState.order.status, 'Paid (dummy)', 'Timeout must not appear paid');
     assert.equal(timeoutState.coffeeStock, coffeeStockBefore, 'Unknown payment should not deduct stock');
-    await app.locator('[data-action="clear-pos"]').click();
+    // Unknown payment intentionally clears the basket after recording the pending order.
 
     // 4. Marketplace checkout creates an order, customer record, driver job and kitchen ticket.
     await go('market');
