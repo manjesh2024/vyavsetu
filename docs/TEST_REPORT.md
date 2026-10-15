@@ -1,7 +1,7 @@
 # Vyavsetu Demo Verification
 
 ## Automated checks
-GitHub Actions checks the embedded JavaScript syntax and validates expected feature hooks in app.html. Latest CI result is available from the Actions page.
+GitHub Actions runs JavaScript/feature-hook validation and a Chromium end-to-end test against the local static demo. Latest successful browser E2E run: https://github.com/manjesh2024/vyavsetu/actions/runs/38705401913. Latest successful Pages deploy: https://github.com/manjesh2024/vyavsetu/actions/runs/38705401980.
 
 ## Interactions covered by the prototype
 - POS: product add/quantity controls, stock guard, illustrative total calculation, Cash/Dummy UPI/Dummy Card, provisional bill save/resume, clear cart.
@@ -32,4 +32,4 @@ GitHub Actions checks the embedded JavaScript syntax and validates expected feat
 - Data persists in the current browser's localStorage only; separate devices and browsers do not share changes.
 - No server/API/database, actual authentication/authorization, payment gateway/webhook, statutory tax engine/invoice numbering, physical printer, or cross-device offline sync is connected.
 - Tax, delivery, demo OTP and subscription data are illustrative.
-- Syntax and CI/static checks pass; full interactive browser tests on real devices have not been run. Never use this prototype for live sales or real customer data.
+- Automated Chromium E2E passes for POS approval/decline, marketplace checkout, driver OTP completion, customer-facing delivery status, purchase receiving, product create, module navigation, dark/light theme switch and phone viewport/overflow checks. This is not a substitute for testing actual iOS/Android/iPad/Windows hardware. Never use this prototype for live sales or real customer data.
