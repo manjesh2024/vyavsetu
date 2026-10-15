@@ -62,6 +62,29 @@ const marketProducts=readStore('vyavsetu_market_products',[
 {id:'m8',shop:'cafe',shopName:'Bean & Bloom',name:'Chocolate cookie box',price:130,stock:40,emoji:'🍪',cat:'Bakery'}]);
 let cart=readStore('vyavsetu_pos_cart',{}), marketCart=readStore('vyavsetu_market_cart',{});
 let marketShop=readStore('vyavsetu_market_shop','green'), demoOrders=readStore('vyavsetu_demo_orders',[]), currentReceipt=readStore('vyavsetu_current_receipt',null);
+let kitchenTickets=readStore('vyavsetu_kitchen_tickets',[
+{id:'K-204',title:'Table 4 · Garden bowls',items:'2 items',minutes:8,status:'Preparing',source:'Dine-in'},
+{id:'K-205',title:'Takeaway · Sandwich combo',items:'3 items',minutes:5,status:'New',source:'Takeaway'},
+{id:'K-206',title:'Table 2 · Fresh salad',items:'1 item',minutes:12,status:'Ready',source:'Dine-in'}
+]);
+let driverOnline=readStore('vyavsetu_driver_online',true);
+let driverJobs=readStore('vyavsetu_driver_jobs',[
+{id:'DV-1042',orderId:'DEMO-1042',shopName:'Green Bowl Co.',customer:'Ananya Shah',address:'Sector 18, Noida',phone:'9999900001',total:540,status:'Assigned',otp:'2468',created:new Date(Date.now()-14*60000).toISOString(),history:[]},
+{id:'DV-1043',orderId:'DEMO-1043',shopName:'Daily Needs Market',customer:'Rohan Mehta',address:'Sector 20, Noida',phone:'9999900002',total:420,status:'Picked up',otp:'1357',created:new Date(Date.now()-22*60000).toISOString(),history:[]}
+]);
+let inventoryItems=readStore('vyavsetu_inventory_items',[
+{id:'MIL-001',name:'Whole milk · 1L',category:'Dairy',stock:4,reorder:12,price:68},
+{id:'COF-014',name:'Arabica coffee beans',category:'Beverage',stock:34,reorder:8,price:420},
+{id:'SAU-011',name:'Tomato sauce · 2kg',category:'Kitchen',stock:18,reorder:6,price:185},
+{id:'PKG-006',name:'Paper takeaway cups',category:'Packaging',stock:7,reorder:20,price:3},
+{id:'DAI-021',name:'Mozzarella cheese',category:'Chilled',stock:15,reorder:5,price:310}
+]);
+let tenantRecords=readStore('vyavsetu_tenants',[
+{id:'TEN-001',name:'Green Bowl Hospitality',owner:'Aarav Sharma',email:'ops@greenbowl.demo',plan:'Growth',status:'Active',locations:4},
+{id:'TEN-002',name:'Daily Needs Retail',owner:'Isha Verma',email:'ops@dailyneeds.demo',plan:'Starter',status:'Active',locations:2},
+{id:'TEN-003',name:'Urban Tandoor Group',owner:'Kabir Singh',email:'admin@urbantandoor.demo',plan:'Enterprise',status:'Trial',locations:8},
+{id:'TEN-004',name:'SwiftCart Local',owner:'Meera Das',email:'team@swiftcart.demo',plan:'Growth',status:'Review',locations:1}
+]);
 function money(n){return new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:2}).format(Number(n)||0)}
 function countCart(b){return Object.values(b).reduce((a,n)=>a+Number(n||0),0)}
 function subtotal(b,ps){return Object.entries(b).reduce((a,[id,q])=>a+(ps.find(p=>p.id===id)?.price||0)*Number(q),0)}
@@ -70,7 +93,20 @@ function marketTotal(){const sub=subtotal(marketCart,marketProducts),tax=Math.ro
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 const stats=(items)=>'<section class="grid">'+items.map(x=>'<article class="card"><div class="stat-label">'+x[0]+'</div><div class="stat">'+x[1]+'</div><div class="delta">'+x[2]+'</div></article>').join('')+'</section>';
 const row=(icon,title,sub,tag,cls='')=>'<div class="row"><div class="product"><div class="product-icon">'+icon+'</div><div><strong>'+title+'</strong><small>'+sub+'</small></div></div><span class="tag '+cls+'">'+tag+'</span></div>';
-function header(p){return '<div class="heading"><div><div class="eyebrow">'+p.eyebrow+'</div><h1>'+p.title+'</h1><p>'+p.sub+'</p></div><button class="btn primary" onclick="toast(\'Demo action completed\')">＋ New action</button></div>'}
+function header(p){
+const cfg={
+overview:['Start a sale','start-sale',false],
+pos:['Take payment','checkout-pos',!countCart(cart)],
+orders:['Export order data','export-orders',!demoOrders.length],
+restaurant:['New kitchen ticket','new-kitchen-ticket',false],
+inventory:['Receive stock','receive-stock',false],
+market:['Checkout basket','checkout-market',!countCart(marketCart)],
+driver:[driverOnline?'Go offline':'Go online','toggle-driver',false],
+admin:['Add tenant','add-tenant',false],
+developer:['Open handoff guide','open-handoff',false]
+}[activePage]||['Open','start-sale',false];
+return '<div class="heading"><div><div class="eyebrow">'+p.eyebrow+'</div><h1>'+p.title+'</h1><p>'+p.sub+'</p></div><button class="btn primary" data-header-action="'+cfg[1]+'" '+(cfg[2]?'disabled':'')+'>'+cfg[0]+' →</button></div>';
+}
 function overview(){return stats([['Today’s sales','₹ 48,250','↑ 12.8% vs yesterday'],['Orders','186','↑ 18 orders today'],['Active products','1,248','Across 3 locations'],['Pending deliveries','12','4 need attention']])+ '<div class="panel-grid"><article class="card"><h2>Business activity <span class="tag good">Live demo</span></h2>'+row('▦','Retail POS','Counter sales · Today','Healthy','good')+row('♨','Restaurant','Kitchen tickets · 8 open','In service','warn')+row('◇','Marketplace','Customer orders · 24 today','Growing','good')+row('➤','Delivery','Drivers active · 6 online','On route','good')+'</article><article class="card"><h2>Quick actions</h2><div class="quick"><button onclick="go(\'pos\')">▦<b>Open POS</b><small>Start a sale</small></button><button onclick="go(\'restaurant\')">♨<b>Kitchen</b><small>View tickets</small></button><button onclick="go(\'inventory\')">▤<b>Inventory</b><small>Check stock</small></button><button onclick="go(\'market\')">◇<b>Marketplace</b><small>Customer view</small></button><button onclick="go(\'driver\')">➤<b>Delivery</b><small>Track dispatch</small></button><button onclick="go(\'admin\')">⚙<b>Super Admin</b><small>Platform health</small></button></div></article></div><div class="notice"><strong>One Ecosystem. Every Business.</strong> &nbsp; Shared product direction for retail, restaurants, marketplace, delivery and platform administration.</div>'}
 function pos(){
 const t=posTotal();
