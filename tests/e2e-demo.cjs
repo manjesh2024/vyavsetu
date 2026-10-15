@@ -111,6 +111,7 @@ const { chromium } = require('playwright');
     await page.locator('#theme').selectOption('light');
     await page.locator('#device').selectOption('iphone');
     assert.ok(await page.locator('#shell.mobile').count(), 'Phone shell should be active');
+    await page.waitForFunction(() => Math.abs(document.querySelector('#shell').getBoundingClientRect().width - 390) < 2);
     const phoneWidth = await page.locator('#shell').evaluate(el => Math.round(el.getBoundingClientRect().width));
     assert.ok(phoneWidth >= 380 && phoneWidth <= 400, 'Unexpected phone preview width: '+phoneWidth);
     const mobile = await browser.newPage({viewport:{width:390,height:844}});
