@@ -50,20 +50,31 @@ const { chromium } = require('playwright');
     assert.ok((await app.locator('#dialogTitle').textContent()).includes('Demo receipt'), 'Marketplace success should show receipt');
     await app.locator('[data-action="close-dialog"]').last().click();
 
-    // 4. Driver can accept, pick up, start route and complete with the demo OTP.
+    const marketOrderId = await app.locator('body').evaluate(() => {
+      const orders = JSON.parse(localStorage.getItem('vyavsetu_demo_orders') || '[]');
+      return orders.find(order => order.customer === 'E2E Demo Customer')?.id;
+    });
+    assert.ok(marketOrderId, 'Marketplace checkout should save an order ID');
+
+    // 4. Driver can accept, pick up, start route and complete that exact order.
     await go('driver');
-    await app.locator('[data-driver-action="accept"]').first().click();
-    await app.locator('[data-driver-action="pickup"]').first().click();
-    await app.locator('[data-driver-action="route"]').first().click();
-    await app.locator('[data-driver-action="complete"]').first().click();
+    let deliveryCard = app.locator('.delivery-card').filter({ hasText: marketOrderId });
+    await deliveryCard.locator('[data-driver-action="accept"]').click();
+    await deliveryCard.locator('[data-driver-action="pickup"]').click();
+    await deliveryCard.locator('[data-driver-action="route"]').click();
+    await deliveryCard.locator('[data-driver-action="complete"]').click();
     await app.locator('#driverOtp').fill('2468');
     await app.locator('[data-action="confirm-delivery"]').click();
-    await app.locator('text=Delivered').first().waitFor();
+    deliveryCard = app.locator('.delivery-card').filter({ hasText: marketOrderId });
+    await assert.equal((await deliveryCard.locator('.tag').textContent()).trim(), 'Delivered',
+      'Driver should mark this exact marketplace order delivered');
 
-    // 5. The customer order list reflects delivery progress.
+    // 5. The customer order list must show delivery status for this exact order.
     await go('market');
-    await app.getByText('Delivered', { exact: true }).first().waitFor();
-
+    const customerOrderRow = app.locator('.order-row').filter({ hasText: marketOrderId });
+    await customerOrderRow.waitFor();
+    await assert.equal((await customerOrderRow.locator('small').nth(1).textContent()).trim(), 'Delivered',
+      'Customer order status should reflect driver completion');
     // 6. Purchasing receiving creates or updates the stock record.
     await go('purchases');
     await app.locator('[data-action="new-purchase"]').click();
