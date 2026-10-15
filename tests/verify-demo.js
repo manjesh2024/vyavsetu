@@ -34,6 +34,18 @@ const required = [
   ['Plans and subscriptions', 'function saveSubscription(id)'],
   ['Support ticket workflow', 'function toggleSupport(id)'],
   ['Feature flags', 'function toggleFeature(id)'],
+  ['Product catalogue CRUD', 'function saveProduct(id)'],
+  ['Purchasing and receiving', 'function purchaseAction(id,action)'],
+  ['Supplier management', 'function saveSupplier(id)'],
+  ['Customer management', 'function saveCustomer(id)'],
+  ['Returns/refunds', 'function processReturn(id,action)'],
+  ['Reports and CSV export', 'function downloadSalesCsv()'],
+  ['Staff records', 'function saveStaff()'],
+  ['Business settings', 'function saveBusinessSettings()'],
+  ['SaaS plans', 'function savePlan()'],
+  ['Tenant subscriptions', 'function saveSubscription(id)'],
+  ['Support centre', 'function saveSupportTicket()'],
+  ['Feature flag screen', 'function features()'],
   ['Developer handoff', 'function developer()']
 ];
 for (const [label, needle] of required) {
