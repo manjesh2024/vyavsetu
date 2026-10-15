@@ -46,6 +46,10 @@ const required = [
   ['Tenant subscriptions', 'function saveSubscription(id)'],
   ['Support centre', 'function saveSupportTicket()'],
   ['Feature flag screen', 'function features()'],
+  ['Feature flags guard shortcuts', 'if(gate&&featureFlags.find(f=>f.id===gate)?.enabled===false)'],
+  ['Catalogue deletion can reassign', "let posProducts=readStore('vyavsetu_pos_products'"] ,
+  ['Purchase receiving creates inventory SKU', "inv={id:p.sku,name:p.productName"] ,
+  ['Customer and driver quick shortcuts', 'aria-label="Quick app navigation"'],
   ['Developer handoff', 'function developer()']
 ];
 for (const [label, needle] of required) {
