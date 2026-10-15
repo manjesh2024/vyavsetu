@@ -62,13 +62,13 @@ const pages={overview:{label:'Overview',eyebrow:'BUSINESS OVERVIEW',title:'Good 
 const content=document.getElementById('content');let activePage='overview';
 function readStore(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
 function writeStore(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
-const posProducts=readStore('vyavsetu_pos_products',[
+let posProducts=readStore('vyavsetu_pos_products',[
 {id:'bowl',name:'Garden bowl',sku:'FOOD-001',price:250,stock:40,emoji:'🥗',cat:'Restaurant'},
 {id:'coffee',name:'Cold coffee',sku:'DRK-004',price:180,stock:35,emoji:'☕',cat:'Restaurant'},
 {id:'sandwich',name:'Grilled sandwich',sku:'FOOD-008',price:220,stock:24,emoji:'🥪',cat:'Restaurant'},
 {id:'pastry',name:'Chocolate pastry',sku:'BAK-012',price:150,stock:18,emoji:'🍰',cat:'Restaurant'},
 {id:'water',name:'Mineral water',sku:'RTL-021',price:30,stock:90,emoji:'💧',cat:'Retail'}]);
-const marketProducts=readStore('vyavsetu_market_products',[
+let marketProducts=readStore('vyavsetu_market_products',[
 {id:'m1',shop:'green',shopName:'Green Bowl Co.',name:'Garden bowl',price:250,stock:40,emoji:'🥗',cat:'Fresh meals'},
 {id:'m2',shop:'green',shopName:'Green Bowl Co.',name:'Paneer power wrap',price:210,stock:25,emoji:'🌯',cat:'Fresh meals'},
 {id:'m3',shop:'green',shopName:'Green Bowl Co.',name:'Fresh orange juice',price:120,stock:30,emoji:'🧃',cat:'Drinks'},
