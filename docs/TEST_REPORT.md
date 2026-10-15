@@ -1,13 +1,19 @@
 # Prototype Test Report
 
-## Checks completed
-- JavaScript syntax was checked for the initial demo bundle before packaging.
-- Repository now contains a responsive launcher, the interactive app shell, an SVG brand mark, and brand notes.
-- Responsive breakpoints are defined for desktop/tablet/mobile and the launcher includes device viewport presets.
-- Theme options: Light, Dark, Ocean, Forest, High Contrast.
-- App navigation: Overview, POS Terminal, Restaurant/KDS, Inventory, Customer Marketplace, Driver App, SaaS Super Admin.
+## Current checks completed
+- Fetched the latest `app.html` and `index.html` from the `main` branch through GitHub and checked their embedded JavaScript with a JavaScript parser; both passed.
+- Confirmed Developer Access is linked in the demo navigation and that its render function includes brand assets, colour-token cards, responsive-device guidance, flow diagrams, production invariants and a developer checklist.
+- Confirmed the selected brand set is committed under `assets/`: light/dark lockups, horizontal lockup, full-colour mark, monochrome marks and app-icon SVGs.
+- Confirmed handoff docs are present: `docs/DEVELOPER_HANDOFF.md`, `docs/ARCHITECTURE_FLOWCHARTS.md` and `docs/RESPONSIVE_DEVICE_MATRIX.md`.
+- Responsive demo provides Light, Dark, Ocean, Forest and High Contrast themes plus device viewport presets for desktop, laptop, store POS, tablet/iPad, Android and iPhone.
 
 ## Not yet verified
-- Full end-to-end browser/device testing has not been run in this environment.
-- GitHub Pages deployment must be confirmed in the repository Actions tab after the workflow runs.
-- Production integrations (authentication, database, real payments, fiscal invoices, printers, and server sync) are not part of this demo.
+- A full real-browser end-to-end test across physical devices has not been performed.
+- GitHub Pages is **not live yet**. Latest workflow reaches the Configure Pages step but fails because Pages has not been configured/allowed for this repository in GitHub settings.
+- Production integrations (authentication, database, payments, legal tax/invoicing, printer/cash-drawer hardware and server sync) are intentionally not implemented in this demo.
+
+## To publish the demo
+Open repository **Settings → Pages → Build and deployment → Source**, choose **GitHub Actions**, save, then rerun the latest workflow from the Actions tab. Verify that the deploy job succeeds before sharing the live URL.
+
+- [GitHub Actions workflow runs](https://github.com/manjesh2024/vyavsetu/actions)
+- [Pages repository settings](https://github.com/manjesh2024/vyavsetu/settings/pages)
