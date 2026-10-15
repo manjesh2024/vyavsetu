@@ -261,6 +261,29 @@ const { chromium } = require('playwright');
     assert.equal(result.row.stock, before + 3);
     assert.ok(result.history.some(x => x.id === 'COF-014' && x.mode === 'adjust'));
 
+    // Staff record and business settings should persist in this browser.
+    await go('staff');
+    await app.locator('[data-action="add-staff"]').click();
+    await app.locator('#staffName').fill('E2E Staff Member');
+    await app.locator('#staffEmail').fill('staff@example.test');
+    await app.locator('#staffRole').selectOption('Cashier');
+    await app.locator('[data-action="save-staff"]').click();
+    const staffSaved = await page.locator('#app').evaluate(frame =>
+      JSON.parse(frame.contentDocument.defaultView.localStorage.getItem('vyavsetu_staff') || '[]')
+        .some(staff => staff.name === 'E2E Staff Member' && staff.role === 'Cashier'));
+    assert.equal(staffSaved, true);
+
+    await go('settings');
+    await app.locator('#settingName').fill('E2E Business Settings');
+    await app.locator('#settingTax').fill('5');
+    await app.locator('#settingDeliveryFee').fill('30');
+    await app.locator('#settingDeliveryThreshold').fill('500');
+    await app.locator('[data-action="save-business-settings"]').first().click();
+    const settingsSaved = await page.locator('#app').evaluate(frame =>
+      JSON.parse(frame.contentDocument.defaultView.localStorage.getItem('vyavsetu_business_settings') || '{}'));
+    assert.equal(settingsSaved.name, 'E2E Business Settings');
+    assert.equal(settingsSaved.deliveryFee, 30);
+
     for (const name of ['overview','pos','orders','products','purchases','inventory','suppliers','customers','returns','reports','staff','settings','restaurant','market','driver','admin','plans','subscriptions','support','features','developer']) {
       await go(name);
       assert.ok(await app.locator('main h1').count(), 'Missing page heading: '+name);
