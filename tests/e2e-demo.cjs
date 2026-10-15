@@ -102,6 +102,22 @@ const { chromium } = require('playwright');
     await app.locator('[data-action="save-product"]').click();
     await app.getByText('E2E Sample Product', { exact: true }).first().waitFor();
 
+    for (const name of ['overview','pos','orders','products','purchases','inventory','suppliers','customers','returns','reports','staff','settings','restaurant','market','driver','admin','plans','subscriptions','support','features','developer']) {
+      await go(name);
+      assert.ok(await app.locator('main h1').count(), 'Missing page heading: '+name);
+    }
+    await page.locator('#theme').selectOption('dark');
+    await page.waitForFunction(() => document.querySelector('#app')?.contentDocument?.documentElement?.dataset?.theme === 'dark');
+    await page.locator('#theme').selectOption('light');
+    await page.locator('#device').selectOption('iphone');
+    assert.ok(await page.locator('#shell.mobile').count(), 'Phone shell should be active');
+    const phoneWidth = await page.locator('#shell').evaluate(el => Math.round(el.getBoundingClientRect().width));
+    assert.ok(phoneWidth >= 380 && phoneWidth <= 400, 'Unexpected phone preview width: '+phoneWidth);
+    const mobile = await browser.newPage({viewport:{width:390,height:844}});
+    await mobile.goto(process.env.VYAVSETU_URL || 'http://127.0.0.1:8000/', {waitUntil:'domcontentloaded'});
+    const dimensions = await mobile.evaluate(() => ({w:innerWidth,d:document.documentElement.scrollWidth}));
+    assert.ok(dimensions.d <= dimensions.w, 'Mobile page overflows: '+JSON.stringify(dimensions));
+    await mobile.close();
     assert.deepEqual(pageErrors, [], 'No unhandled browser JavaScript errors should occur: ' + pageErrors.join('; '));
     console.log('PASS POS approval receipt');
     console.log('PASS declined payment preserves cart');
@@ -109,6 +125,8 @@ const { chromium } = require('playwright');
     console.log('PASS driver delivery OTP and completion');
     console.log('PASS customer order status tracking');
     console.log('PASS purchase receiving and product creation');
+    console.log('PASS all module navigation');
+    console.log('PASS dark theme and phone viewport');
   } finally {
     await browser.close();
   }
