@@ -71,6 +71,7 @@ function developer(){
   '<p class="flow-desc" style="margin-top:12px"><a href="docs/DEVELOPER_HANDOFF.md" target="_blank">Complete developer specification ↗</a> · <a href="docs/ARCHITECTURE_FLOWCHARTS.md" target="_blank">Flowcharts and Mermaid source ↗</a> · <a href="BRAND.md" target="_blank">Brand guide ↗</a></p>';
 }
 
+function GenCopy(value){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(value).then(function(){toast('Copied '+value)}).catch(function(){toast('Colour: '+value)})}else{toast('Colour: '+value)}}
 function render(){const p=pages[activePage];document.getElementById('crumbPage').textContent=p.label;document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===activePage));let body=({overview, pos, restaurant, inventory, market, driver, admin, developer})[activePage]();content.innerHTML=header(p)+body}
 function go(page){activePage=page;render();window.scrollTo({top:0,behavior:'smooth'})}
 function toast(message){let el=document.getElementById('toast');if(!el){el=document.createElement('div');el.id='toast';el.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:12px 18px;border-radius:12px;box-shadow:0 8px 28px #0002;z-index:50;max-width:90vw;text-align:center';document.body.appendChild(el)}el.textContent=message;el.classList.remove('hidden');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>el.classList.add('hidden'),2600)}
