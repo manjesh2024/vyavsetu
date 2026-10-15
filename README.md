@@ -13,7 +13,7 @@ Open `index.html` locally, or enable GitHub Pages in **Settings → Pages → Bu
 - Responsive layouts for desktop, laptop, store POS, tablet/iPad, Android and iPhone viewport previews.
 - Light, Dark, Ocean, Forest and High Contrast themes.
 - Demo surfaces for Business Admin, POS Terminal, Restaurant/KDS, Customer Marketplace, Driver App and SaaS Super Admin.
-- Sample data only; no live payments, backend synchronization, statutory invoicing, or production authentication.
+- Functional browser-local demo interactions with sample data, including POS cart, marketplace cart, dummy payment checkout, receipt view/print, provisional bills and order history. No live gateway, backend sync, statutory invoicing or production authentication.
 
 ## Brand assets and developer handoff
 
@@ -47,3 +47,14 @@ No build step is required. Open `index.html` in a modern browser. For a local se
 This repository contains a presentation/demo prototype, not the production application. Production work will need the agreed Flutter clients, Spring Boot backend, PostgreSQL, offline POS storage, authentication/authorization, tenant isolation, audit logs, idempotent synchronization and payment/invoice integrations.
 
 See `BRAND.md` and `docs/` for brand notes and implementation phases.
+## Checkout demo
+
+- POS: add items, change quantities, save a provisional bill, or check out using Cash, Dummy UPI or Dummy Card.
+- Marketplace: choose a single shop, add items, enter a name/phone/address, then choose Cash on delivery or a dummy online method.
+- Dummy payment results can be set to approved, declined or timeout/unknown to demonstrate the respective state transitions.
+- Orders and receipts remain in this browser's localStorage. Dummy payments do not move money and receipts are not statutory tax invoices.
+- [Demo verification checklist](docs/TEST_REPORT.md)
+
+## Production boundary
+
+The current checkout is client-side simulation only. Never use it for live commerce. Production requires server-authoritative pricing/tax, authentication/authorization, durable database transactions, idempotency, payment provider/webhooks, legal invoice numbering, stock concurrency policy, printing integration and offline sync.
