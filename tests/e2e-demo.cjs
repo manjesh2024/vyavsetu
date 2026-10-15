@@ -164,6 +164,49 @@ const { chromium } = require('playwright');
     assert.ok(!(await unrelatedCustomerOrder.innerText()).includes('Delivered'),
       'Driver status should never leak between orders sharing customer details');
 
+    // Customer directory create action persists a local record.
+    await go('customers');
+    await app.locator('[data-action="add-customer"]').click();
+    await app.locator('#custName').fill('E2E Directory Customer');
+    await app.locator('#custPhone').fill('9876501234');
+    await app.locator('#custEmail').fill('directory@example.test');
+    await app.locator('[data-action="save-customer"]').click();
+    await app.getByText('E2E Directory Customer', { exact: true }).first().waitFor();
+    const customerSaved = await page.locator('#app').evaluate(frame =>
+      JSON.parse(frame.contentDocument.defaultView.localStorage.getItem('vyavsetu_customers') || '[]')
+        .some(customer => customer.name === 'E2E Directory Customer' && customer.phone === '9876501234'));
+    assert.equal(customerSaved, true, 'Customer form should persist the new customer');
+
+    // Supplier create action persists a local record.
+    await go('suppliers');
+    await app.locator('[data-action="add-supplier"]').click();
+    await app.locator('#supName').fill('E2E Supplier');
+    await app.locator('#supContact').fill('QA Supplier');
+    await app.locator('#supEmail').fill('supplier@example.test');
+    await app.locator('#supPhone').fill('9876501111');
+    await app.locator('[data-action="save-supplier"]').click();
+    await app.getByText('E2E Supplier', { exact: true }).first().waitFor();
+    const supplierSaved = await page.locator('#app').evaluate(frame =>
+      JSON.parse(frame.contentDocument.defaultView.localStorage.getItem('vyavsetu_suppliers') || '[]')
+        .some(supplier => supplier.name === 'E2E Supplier' && supplier.email === 'supplier@example.test'));
+    assert.equal(supplierSaved, true, 'Supplier form should persist the new supplier');
+
+    // Return/refund is explicitly a local simulation: it saves state without a real refund.
+    await go('returns');
+    await app.locator('[data-action="new-return"]').click();
+    await app.locator('#returnAmount').fill('10');
+    await app.locator('[data-action="save-return"]').click();
+    const returnId = await page.locator('#app').evaluate(frame =>
+      JSON.parse(frame.contentDocument.defaultView.localStorage.getItem('vyavsetu_returns') || '[]')[0]?.id);
+    assert.ok(returnId, 'Return request should persist');
+    await app.locator('[data-return-action="approve"][data-return-id="' + returnId + '"]').click();
+    const returnSaved = await page.locator('#app').evaluate((frame, id) =>
+      JSON.parse(frame.contentDocument.defaultView.localStorage.getItem('vyavsetu_returns') || '[]').find(item => item.id === id),
+      returnId);
+    assert.equal(returnSaved.status, 'Approved (refund simulated)');
+    assert.match(returnSaved.refundReference || '', /^DUMMY-REFUND-/,
+      'Refund record should use a dummy reference only');
+
     // 7. Purchase receiving creates or updates a stock record.
     await go('purchases');
     await app.locator('[data-action="new-purchase"]').click();
