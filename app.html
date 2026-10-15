@@ -29,6 +29,19 @@
 <button data-page="orders" title="Orders & Receipts">▣ <span class="nav-label">Orders & Receipts</span></button>
 <button data-page="restaurant" title="Restaurant">♨ <span class="nav-label">Restaurant / KDS</span></button>
 <button data-page="inventory" title="Inventory">▤ <span class="nav-label">Inventory</span></button>
+
+<button data-page="products" title="Products">▣ <span class="nav-label">Products</span></button>
+<button data-page="purchases" title="Purchases">＋ <span class="nav-label">Purchase Orders</span></button>
+<button data-page="suppliers" title="Suppliers">♧ <span class="nav-label">Suppliers</span></button>
+<button data-page="customers" title="Customers">♙ <span class="nav-label">Customers</span></button>
+<button data-page="returns" title="Returns">↩ <span class="nav-label">Returns & Refunds</span></button>
+<button data-page="reports" title="Reports">▥ <span class="nav-label">Reports</span></button>
+<button data-page="staff" title="Staff">♟ <span class="nav-label">Staff & Roles</span></button>
+<button data-page="settings" title="Settings">⚙ <span class="nav-label">Business Settings</span></button>
+<button data-page="plans" title="Plans">◇ <span class="nav-label">Plans & Pricing</span></button>
+<button data-page="subscriptions" title="Subscriptions">₹ <span class="nav-label">Subscriptions</span></button>
+<button data-page="support" title="Support">✉ <span class="nav-label">Support Centre</span></button>
+
 <button data-page="market" title="Marketplace">◇ <span class="nav-label">Customer Marketplace</span></button>
 <button data-page="driver" title="Delivery">➤ <span class="nav-label">Driver App</span></button>
 <button data-page="admin" title="Super Admin">⚙ <span class="nav-label">SaaS Super Admin</span></button>
@@ -42,7 +55,7 @@
 </main>
 </div>
 <script>
-const pages={overview:{label:'Overview',eyebrow:'BUSINESS OVERVIEW',title:'Good morning, business is moving.',sub:'Here’s a snapshot of your connected business ecosystem.'},pos:{label:'POS Terminal',eyebrow:'POINT OF SALE',title:'Your counter, ready to sell.',sub:'Product search, quantity controls and simulated payment methods.'},orders:{label:'Orders & Receipts',eyebrow:'ORDER HISTORY',title:'Every demo transaction, in one place.',sub:'Review receipts, statuses and dummy payment references saved in this browser.'},restaurant:{label:'Restaurant / KDS',eyebrow:'RESTAURANT OPERATIONS',title:'Service is in motion.',sub:'Track kitchen tickets and order readiness at a glance.'},inventory:{label:'Inventory',eyebrow:'STOCK CONTROL',title:'Know what is moving.',sub:'Monitor stock levels and keep replenishment visible.'},market:{label:'Customer Marketplace',eyebrow:'CUSTOMER MARKETPLACE',title:'Discover nearby favourites.',sub:'A sample customer-facing storefront and order experience.'},driver:{label:'Driver App',eyebrow:'LAST-MILE DELIVERY',title:'Deliveries, clearly organised.',sub:'A lightweight dispatch view for drivers and operations.'},admin:{label:'SaaS Super Admin',eyebrow:'PLATFORM CONTROL',title:'Manage the whole ecosystem.',sub:'Sample tenant, subscription and platform health overview.'},developer:{label:'Developer Access',eyebrow:'DEVELOPER HANDOFF',title:'The complete Vyavsetu blueprint.',sub:'Brand assets, design tokens, responsive rules, architecture, business logic and implementation flows.'}};
+const pages={overview:{label:'Overview',eyebrow:'BUSINESS OVERVIEW',title:'Good morning, business is moving.',sub:'Here’s a snapshot of your connected business ecosystem.'},pos:{label:'POS Terminal',eyebrow:'POINT OF SALE',title:'Your counter, ready to sell.',sub:'Product search, quantity controls and simulated payment methods.'},orders:{label:'Orders & Receipts',eyebrow:'ORDER HISTORY',title:'Every demo transaction, in one place.',sub:'Review receipts, statuses and dummy payment references saved in this browser.'},restaurant:{label:'Restaurant / KDS',eyebrow:'RESTAURANT OPERATIONS',title:'Service is in motion.',sub:'Track kitchen tickets and order readiness at a glance.'},inventory:{label:'Inventory',eyebrow:'STOCK CONTROL',title:'Know what is moving.',sub:'Monitor stock levels and keep replenishment visible.'},market:{label:'Customer Marketplace',eyebrow:'CUSTOMER MARKETPLACE',title:'Discover nearby favourites.',sub:'A sample customer-facing storefront and order experience.'},driver:{label:'Driver App',eyebrow:'LAST-MILE DELIVERY',title:'Deliveries, clearly organised.',sub:'A lightweight dispatch view for drivers and operations.'},admin:{label:'SaaS Super Admin',eyebrow:'PLATFORM CONTROL',title:'Manage the whole ecosystem.',sub:'Sample tenant, subscription and platform health overview.'},developer:{label:'Developer Access',eyebrow:'DEVELOPER HANDOFF',title:'The complete Vyavsetu blueprint.',sub:'Brand assets, design tokens, responsive rules, architecture, business logic and implementation flows.'},products:{label:'Products',eyebrow:'CATALOGUE',title:'Manage the items you sell.',sub:'Add, edit, search and remove demo products used by the POS.'},purchases:{label:'Purchase Orders',eyebrow:'SUPPLIER OPERATIONS',title:'Replenish stock with a clear workflow.',sub:'Create purchase orders, mark them ordered and receive goods into inventory.'},suppliers:{label:'Suppliers',eyebrow:'SUPPLY CHAIN',title:'Keep supplier details organised.',sub:'Add suppliers for purchasing and maintain contact records.'},customers:{label:'Customers',eyebrow:'CUSTOMER CRM',title:'Keep customer records together.',sub:'Create and maintain customer records and see local demo order history.'},returns:{label:'Returns & Refunds',eyebrow:'AFTER-SALES',title:'Record returns and simulated refunds.',sub:'Create a return request against a POS sale and approve or reject it.'},reports:{label:'Reports',eyebrow:'BUSINESS ANALYTICS',title:'Understand your demo business.',sub:'Sales, payment status, average order value, products and recent activity.'},staff:{label:'Staff & Roles',eyebrow:'TEAM ACCESS',title:'Manage staff roles for the demo.',sub:'Create staff profiles and select a role. This is a UI model, not production access control.'},settings:{label:'Business Settings',eyebrow:'CONFIGURATION',title:'Adjust demo business rules.',sub:'Business name, illustrative tax rate and marketplace delivery settings.'},plans:{label:'Plans & Pricing',eyebrow:'SAAS CONFIGURATION',title:'Manage sample subscription plans.',sub:'Add plans and toggle whether new subscriptions can use them.'},subscriptions:{label:'Subscriptions',eyebrow:'BILLING ADMIN',title:'Assign plans and track tenants.',sub:'Change a tenant plan or status; actions are saved in this browser.'},support:{label:'Support Centre',eyebrow:'CUSTOMER SUPPORT',title:'Track tenant support tickets.',sub:'Create, assign, update and resolve demo support requests.'}};
 const content=document.getElementById('content');let activePage='overview';
 function readStore(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
 function writeStore(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
@@ -86,11 +99,39 @@ let tenantRecords=readStore('vyavsetu_tenants',[
 {id:'TEN-003',name:'Urban Tandoor Group',owner:'Kabir Singh',email:'admin@urbantandoor.demo',plan:'Enterprise',status:'Trial',locations:8},
 {id:'TEN-004',name:'SwiftCart Local',owner:'Meera Das',email:'team@swiftcart.demo',plan:'Growth',status:'Review',locations:1}
 ]);
+
+let supplierRecords=readStore('vyavsetu_suppliers',[
+{id:'SUP-001',name:'Fresh Farms Supply',contact:'Nikhil',email:'freshfarms@example.test',phone:'9000000011',status:'Active'},
+{id:'SUP-002',name:'Metro Packaging',contact:'Asha',email:'metro-pack@example.test',phone:'9000000012',status:'Active'},
+{id:'SUP-003',name:'Bean Route Traders',contact:'Imran',email:'beanroute@example.test',phone:'9000000013',status:'Active'}
+]);
+let purchaseOrders=readStore('vyavsetu_purchase_orders',[]);
+let customerRecords=readStore('vyavsetu_customers',[]);
+let returnRequests=readStore('vyavsetu_returns',[]);
+let staffRecords=readStore('vyavsetu_staff',[
+{id:'ST-001',name:'Aarav Sharma',email:'aarav@example.test',role:'Owner',status:'Active'},
+{id:'ST-002',name:'Priya Verma',email:'priya@example.test',role:'Manager',status:'Active'},
+{id:'ST-003',name:'Kabir Singh',email:'kabir@example.test',role:'Cashier',status:'Active'}
+]);
+let planRecords=readStore('vyavsetu_plans',[
+{id:'PLAN-STARTER',name:'Starter',price:799,period:'month',features:'POS, products, basic reports',active:true},
+{id:'PLAN-GROWTH',name:'Growth',price:1499,period:'month',features:'Multi-location, inventory, marketplace',active:true},
+{id:'PLAN-ENTERPRISE',name:'Enterprise',price:2999,period:'month',features:'Advanced reports, priority support',active:true}
+]);
+let supportTickets=readStore('vyavsetu_support_tickets',[]);
+let featureFlags=readStore('vyavsetu_feature_flags',[
+{id:'marketplace',label:'Customer marketplace',enabled:true},
+{id:'driver',label:'Driver dispatch',enabled:true},
+{id:'kds',label:'Restaurant KDS',enabled:true},
+{id:'advancedReports',label:'Advanced reports',enabled:false}
+]);
+let businessSettings=readStore('vyavsetu_business_settings',{name:'Vyavsetu Demo Store',taxRate:5,deliveryFee:25,freeDeliveryThreshold:299,currency:'INR'});
+
 function money(n){return new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:2}).format(Number(n)||0)}
 function countCart(b){return Object.values(b).reduce((a,n)=>a+Number(n||0),0)}
 function subtotal(b,ps){return Object.entries(b).reduce((a,[id,q])=>a+(ps.find(p=>p.id===id)?.price||0)*Number(q),0)}
-function posTotal(){const sub=subtotal(cart,posProducts);return{sub,tax:Math.round(sub*5)/100,total:sub+Math.round(sub*5)/100}}
-function marketTotal(){const sub=subtotal(marketCart,marketProducts),tax=Math.round(sub*5)/100,delivery=sub===0?0:(sub>=299?0:25);return{sub,tax,delivery,total:sub+tax+delivery}}
+function posTotal(){const sub=subtotal(cart,posProducts),tax=Math.round(sub*Number(businessSettings.taxRate||0))/100;return{sub,tax,total:sub+tax}}
+function marketTotal(){const sub=subtotal(marketCart,marketProducts),tax=Math.round(sub*Number(businessSettings.taxRate||0))/100,delivery=sub===0?0:(sub>=Number(businessSettings.freeDeliveryThreshold||0)?0:Number(businessSettings.deliveryFee||0));return{sub,tax,delivery,total:sub+tax+delivery}}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 const stats=(items)=>'<section class="grid">'+items.map(x=>'<article class="card"><div class="stat-label">'+x[0]+'</div><div class="stat">'+x[1]+'</div><div class="delta">'+x[2]+'</div></article>').join('')+'</section>';
 const row=(icon,title,sub,tag,cls='')=>'<div class="row"><div class="product"><div class="product-icon">'+icon+'</div><div><strong>'+title+'</strong><small>'+sub+'</small></div></div><span class="tag '+cls+'">'+tag+'</span></div>';
