@@ -1,6 +1,6 @@
 # Vyavsetu Logo Assets
 
-All logo SVGs are vector artwork for browser and app integration. Primary palette: navy `#0F2D4A`, green `#16C47F`, cyan `#0EA5E9`, orange `#F59E0B`.
+The current SVGs in this directory are earlier vector approximations. The approved renamed PNG set was prepared separately as a downloadable logo pack; do not treat the earlier SVG approximations as the approved original artwork. Primary palette: navy `#0F2D4A`, green `#16C47F`, cyan `#0EA5E9`, orange `#F59E0B`.
 
 | File | Use |
 |---|---|
@@ -16,3 +16,19 @@ All logo SVGs are vector artwork for browser and app integration. Primary palett
 Tagline: **One Ecosystem. Every Business.**
 
 Do not stretch/recolour/rotate the logo or add unapproved effects. Preserve clear space. The lockups are SVG redraws/traces based on the approved generated brand reference; confirm against final artwork before print production or trademark registration. Generate raster store assets from the SVGs at the required platform sizes and test on real light/dark surfaces.
+
+
+## Approved renamed PNG pack
+
+The intended filenames are:
+
+- `vyavsetu-logo-light.png`
+- `vyavsetu-logo-dark.png`
+- `vyavsetu-app-icon-light.png`
+- `vyavsetu-app-icon-dark.png`
+- `vyavsetu-logo-horizontal.png`
+- `vyavsetu-logo-monochrome-navy.png`
+- `vyavsetu-logo-monochrome-white.png`
+- transparent variants with the same base names ending in `-transparent.png`
+
+These are the user's supplied artwork, not regenerated or redrawn. **Repository note:** the binary PNGs themselves have not yet been committed to this GitHub repository; see the project status in README. Do not change the SVG art and call it the same original.
