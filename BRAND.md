@@ -11,6 +11,14 @@ The selected concept uses a three-part leaf/V mark to communicate growth, techno
 - Cyan: #0EA5E9 — technology
 - Orange: #F59E0B — energy and progress
 
+## Logo asset variants
+
+- [Light-background lockup](assets/vyavsetu-lockup-light.svg)
+- [Dark-background lockup](assets/vyavsetu-lockup-dark.svg)
+- [Horizontal lockup](assets/vyavsetu-horizontal.svg)
+- [Primary mark](assets/vyavsetu-mark.svg)
+- [Asset usage guide](assets/README.md)
+
 ## Typography
 Use a modern geometric sans-serif such as Poppins for brand headlines; use a system sans-serif fallback for performance and portability.
 
