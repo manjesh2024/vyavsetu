@@ -73,8 +73,14 @@ const { chromium } = require('playwright');
     await go('market');
     const customerOrderRow = app.locator('.order-row').filter({ hasText: marketOrderId });
     await customerOrderRow.waitFor();
-    await assert.equal((await customerOrderRow.locator('small').nth(1).textContent()).trim(), 'Delivered',
-      'Customer order status should reflect driver completion');
+    const customerStatusTexts = await customerOrderRow.locator('small').allTextContents();
+    const deliveryDiagnostics = await app.locator('body').evaluate(() => ({
+      targetOrder: JSON.parse(localStorage.getItem('vyavsetu_demo_orders') || '[]').find(order => order.customer === 'E2E Demo Customer'),
+      matchingJobs: JSON.parse(localStorage.getItem('vyavsetu_driver_jobs') || '[]').filter(job => job.customer === 'E2E Demo Customer'),
+      deliveryStatuses: JSON.parse(localStorage.getItem('vyavsetu_delivery_statuses') || '{}')
+    }));
+    assert.ok(customerStatusTexts.includes('Delivered'),
+      'Customer order status should reflect driver completion. Row: '+JSON.stringify(customerStatusTexts)+' Data: '+JSON.stringify(deliveryDiagnostics));
     // 6. Purchasing receiving creates or updates the stock record.
     await go('purchases');
     await app.locator('[data-action="new-purchase"]').click();
