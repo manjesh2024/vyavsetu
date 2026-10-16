@@ -42,7 +42,7 @@
 </main>
 <nav class="mobiletab" aria-label="Customer navigation"><button class="tab active" data-view="home"><span class="tabicon">⌂</span>Home</button><button class="tab" data-view="categories"><span class="tabicon">▦</span>Categories</button><button class="tab" onclick="openCart()"><span class="tabicon">🛍</span>Cart</button><button class="tab" data-view="orders"><span class="tabicon">◷</span>Orders</button><button class="tab" data-view="profile"><span class="tabicon">♙</span>Account</button></nav>
 </div>
-<div class="overlay" id="cartoverlay" onclick="if(event.target===this)closeCart()"><aside class="drawer" role="dialog" aria-modal="true" aria-label="Shopping cart"><div class="drawerhead"><div><div class="eyebrow">YOUR BAG</div><h2>Shopping cart <span id="drawerqty" style="color:#90a096;font-size:15px"></span></h2></div><button class="close" onclick="closeCart()" aria-label="Close cart">×</button></div><div class="cartitems" id="cartitems"></div><div class="cartbottom" id="cartbottom"></div></aside></div>
+<div class="overlay" id="cartoverlay" onclick="if(event.target===this)closeCart()"><aside class="drawer" role="dialog" aria-modal="true" aria-label="Shopping cart"><div class="drawerhead"><div><div class="eyebrow">YOUR BAG</div><h2>Shopping cart <span id="drawerqty" style="color:#90a096;font-size:15px"></span></h2></div><button class="textlink" style="margin-left:auto;margin-right:8px" onclick="emptyBasket()">Empty bag</button><button class="close" onclick="closeCart()" aria-label="Close cart">×</button></div><div class="cartitems" id="cartitems"></div><div class="cartbottom" id="cartbottom"></div></aside></div>
 <div class="toast" id="toast"></div>
 <script>
 const products=[
