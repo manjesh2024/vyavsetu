@@ -42,7 +42,7 @@ const { chromium } = require('playwright');
     await app.locator('#payMethod').selectOption('cash');
     await app.locator('#payResult').selectOption('success');
     await app.locator('[data-action="confirm-checkout"]').click();
-    assert.ok((await app.locator('#dialogTitle').textContent()).includes('Demo receipt'), 'POS success should show receipt');
+    assert.ok((await app.locator('#dialogTitle').textContent()).includes('Receipt & invoice'), 'POS success should show receipt and invoice actions');
     await app.locator('[data-action="close-dialog"]').last().click();
     const posStockAfter = await page.locator('#app').evaluate(frame =>
       JSON.parse(frame.contentDocument.defaultView.localStorage.getItem('vyavsetu_pos_products') || '[]')
@@ -99,7 +99,7 @@ const { chromium } = require('playwright');
     await app.locator('#payMethod').selectOption('upi');
     await app.locator('#payResult').selectOption('success');
     await app.locator('[data-action="confirm-checkout"]').click();
-    assert.ok((await app.locator('#dialogTitle').textContent()).includes('Demo receipt'), 'Marketplace success should show receipt');
+    assert.ok((await app.locator('#dialogTitle').textContent()).includes('Receipt & invoice'), 'Marketplace success should show receipt and invoice actions');
     await app.locator('[data-action="close-dialog"]').last().click();
 
     const marketOrderId = await page.locator('#app').evaluate(frame => {
