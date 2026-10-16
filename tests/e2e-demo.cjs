@@ -296,6 +296,9 @@ const { chromium } = require('playwright');
       await app.locator('[data-print-format="' + format + '"]').click();
       const renderedLayout = await app.locator('#printRoot > article').getAttribute('class');
       assert.ok(renderedLayout.includes(layoutClass), 'Wrong print layout for ' + format + ': ' + renderedLayout);
+      const printImages = await app.locator('#printRoot img').evaluateAll(imgs => imgs.map(img => ({src: img.getAttribute('src'), complete: img.complete, width: img.naturalWidth})));
+      assert.ok(printImages.length > 0, 'Expected a logo image in the ' + format + ' print layout');
+      assert.ok(printImages.every(img => img.complete && img.width > 0), 'Print logo did not load for ' + format + ': ' + JSON.stringify(printImages));
       await app.locator('[data-action="close-dialog"]').last().click();
     }
 
