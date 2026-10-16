@@ -15,18 +15,22 @@ Open `index.html` locally, or enable GitHub Pages in **Settings → Pages → Bu
 - Demo surfaces: Overview, POS, Orders & Receipts, Products, Purchase Orders, Inventory, Suppliers, Customers, Returns/Refunds, Reports, Staff/Roles, Business Settings, Restaurant/KDS, Customer Marketplace, Driver App, SaaS Super Admin, Plans, Subscriptions, Support, Feature Flags and Developer Access.
 - Functional browser-local demo interactions: product/supplier/customer/staff/tenant/plan/support CRUD; purchase receiving; stock adjustments; POS/marketplace checkout; dummy payment outcomes; provisional bills; receipt print/export; KDS transitions; driver pickup/route/OTP delivery; return/refund simulation; and CSV/JSON reports. No live gateway, backend sync, statutory invoices or production authentication.
 
-## Brand assets and developer handoff
+## Visual developer documentation
 
-- [Light logo lockup](assets/vyavsetu-lockup-light.svg)
-- [Dark logo lockup](assets/vyavsetu-lockup-dark.svg)
-- [Horizontal logo](assets/vyavsetu-horizontal.svg)
-- [Primary mark](assets/vyavsetu-mark.svg)
-- [Logo asset usage guide](assets/README.md)
-- [Developer handoff specification](docs/DEVELOPER_HANDOFF.md)
-- [Architecture and business flowcharts](docs/ARCHITECTURE_FLOWCHARTS.md)
-- [Responsive device QA matrix](docs/RESPONSIVE_DEVICE_MATRIX.md)
+**[Open the branded HTML Developer Documentation Portal](docs/index.html)**
 
-Open **Developer Access** from the in-demo navigation for a visual brand and flowchart reference.
+This portal includes visual pages for architecture and business flowcharts, developer handoff, brand guidelines, responsive/device QA, test verification and Hinglish quick start. Each HTML page links to its source Markdown so the source documents remain editable in the repository.
+
+- [Visual architecture & flowcharts](docs/architecture-flowcharts.html)
+- [Visual developer handoff](docs/developer-handoff.html)
+- [Visual brand guidelines](docs/brand-guidelines.html)
+- [Visual responsive/device matrix](docs/responsive-device-matrix.html)
+- [Visual test report](docs/test-report.html)
+- [Visual quick start (Hinglish)](docs/quick-start-hinglish.html)
+
+Logo assets: [light lockup](assets/vyavsetu-lockup-light.svg) · [dark lockup](assets/vyavsetu-lockup-dark.svg) · [horizontal logo](assets/vyavsetu-horizontal.svg) · [dark-theme horizontal logo](assets/vyavsetu-horizontal-dark.svg) · [primary mark](assets/vyavsetu-mark.svg) · [asset usage README](assets/README.md).
+
+You can also open **Developer Access** from the in-demo navigation for the visual documentation library.
 
 ## Brand direction
 
