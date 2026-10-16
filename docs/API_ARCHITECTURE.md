@@ -768,6 +768,7 @@ package com.vyavsetu.common.realtime;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
@@ -776,16 +777,24 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private final String[] allowedOrigins;
+    private final StompAuthenticationInterceptor authenticationInterceptor;
 
     public WebSocketConfig(
-            @Value("\${app.realtime.allowed-origins}") String[] allowedOrigins) {
+            @Value("\${app.realtime.allowed-origins}") String[] allowedOrigins,
+            StompAuthenticationInterceptor authenticationInterceptor) {
         this.allowedOrigins = allowedOrigins;
+        this.authenticationInterceptor = authenticationInterceptor;
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws").setAllowedOriginPatterns(allowedOrigins);
         // Add SockJS only if a documented browser fallback is actually needed.
+    }
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(authenticationInterceptor);
     }
 
     @Override
@@ -1143,7 +1152,7 @@ Use the same configuration approach for Store and Driver. For a physical Android
 | Works on one instance only | Simple broker is in-memory; use broker relay or shared event transport for multiple replicas. |
 | Browser complains about mixed content | If page is HTTPS, WebSocket must use WSS in production; localhost exceptions are for local development only. |
 
-## 11. Security, privacy & reliability
+## 15. Security, privacy & reliability
 
 - TLS, short-lived access tokens, refresh rotation, password hashing and OTP attempt limits.
 - Object-level tests for orders, addresses, payments, conversations and driver jobs.
@@ -1153,7 +1162,7 @@ Use the same configuration approach for Store and Driver. For a physical Android
 - Logs include requestId/tenantId/actorId/module/entity/outcome but omit passwords, OTPs, tokens, card data, full addresses and chat content.
 - Monitor API latency, error rate, checkout failure, sync queue age, webhook lag, outbox retries, inventory conflicts and driver dispatch latency.
 
-## 15. Implementation order
+## 16. Implementation order
 
 1. **Foundation:** API envelope/errors, auth/session, tenant context, permissions, Flyway, request IDs, idempotency and OpenAPI.
 2. **Marketplace slice:** store/catalog → quote/order → merchant accept/ready → driver delivery → customer timeline.
@@ -1165,7 +1174,7 @@ Use the same configuration approach for Store and Driver. For a physical Android
 
 Do not implement all 137 endpoints in one unreviewed batch. Ship a narrow end-to-end vertical slice while keeping contracts versioned and testable.
 
-## 16. Acceptance checklist
+## 17. Acceptance checklist
 
 - [ ] All 137 proposal endpoints are represented in OpenAPI with schemas, access, response codes and error model before client integration.
 - [ ] Tests prove a user cannot read another customer's order/address/payment/chat or another tenant's store.
@@ -1178,7 +1187,7 @@ Do not implement all 137 endpoints in one unreviewed batch. Ship a narrow end-to
 - [ ] OpenAPI examples match Java DTOs and contract tests.
 - [ ] Current HTML prototype, screens, logic and 36 localStorage keys remain untouched by documentation-only changes.
 
-## 17. Related documents
+## 18. Related documents
 
 - [Architecture & business flowcharts](ARCHITECTURE_FLOWCHARTS.md) · [visual version](architecture-flowcharts.html)
 - [Developer handoff](DEVELOPER_HANDOFF.md) · [visual handoff](developer-handoff.html)
