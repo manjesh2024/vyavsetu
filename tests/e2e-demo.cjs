@@ -301,7 +301,12 @@ const { chromium } = require('playwright');
     for (const name of ['overview','pos','orders','products','purchases','inventory','suppliers','customers','returns','reports','staff','settings','restaurant','market','driver','admin','plans','subscriptions','support','features','developer']) {
       await go(name);
       assert.ok(await app.locator('main h1').count(), 'Missing page heading: '+name);
+      if (name === 'developer') assert.equal(await app.locator('.dev-doc-card').count(), 6, 'Developer Access should show the visual documentation library');
     }
+    await app.locator('#localDevice').selectOption('iphone');
+    await page.waitForFunction(() => Math.abs(document.querySelector('#shell').getBoundingClientRect().width - 390) < 2);
+    await app.locator('#localDevice').selectOption('auto');
+    await page.waitForFunction(() => document.querySelector('#shell').getBoundingClientRect().width > 1000);
     await app.locator('#localTheme').selectOption('dark');
     await page.waitForFunction(() => document.querySelector('#app')?.contentDocument?.documentElement?.dataset?.theme === 'dark');
     await app.locator('#localTheme').selectOption('light');
