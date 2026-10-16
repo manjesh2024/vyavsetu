@@ -652,6 +652,497 @@ Java rules:
 - Use Flyway migrations and PostgreSQL integration tests, not production auto-DDL.
 - Store secrets outside source control; admin settings responses return configured status, not secret values.
 
+## 11. Realtime updates — WebSocket + STOMP
+
+### Decision and boundary
+
+Use **WebSocket with STOMP 1.2** for server-pushed updates in Customer, Store and Driver apps. Keep **REST as the authoritative command/read API** for checkout/order creation, store accept/reject/preparing/ready/handover, driver accept/pickup/start/complete, payment reconciliation and message creation. WebSocket publishes committed changes; it is not a second database and does not replace the 137 REST operations.
+
+This is the proposed production design. The current HTML Customer/Store/Driver previews do **not** connect to a WebSocket server, and this repository does not yet contain a production Java backend or Flutter app projects. Do not add WebSocket calls to the existing previews as part of the documentation-only task.
+
+### Connection and destinations
+
+| Item | Local development | Production |
+|---|---|---|
+| REST base | `http://localhost:8080/api/v1` | `https://api.<your-domain>/api/v1` |
+| WebSocket handshake | `ws://localhost:8080/ws` | `wss://api.<your-domain>/ws` |
+| STOMP version | STOMP 1.2 over WebSocket | STOMP 1.2 over WebSocket |
+| Client-to-server app prefix | `/app/**` | `/app/**` |
+| Broker destinations | `/topic/**`, `/queue/**` | `/topic/**`, `/queue/**` |
+| Per-user destinations | `/user/queue/**` | `/user/queue/**` |
+
+The WebSocket handshake URL and STOMP destinations are infrastructure channels, not additional REST business endpoints. The 137 REST count remains unchanged.
+
+| Destination | Consumer | Example events | Authorization requirement |
+|---|---|---|---|
+| `/user/queue/order-updates` | Customer app | `ORDER.CREATED`, `ORDER.STATUS_CHANGED`, `PAYMENT.STATUS_CHANGED` | Authenticated user is a participant on that order. |
+| `/user/queue/store-orders` | Store app | `STORE.ORDER_ASSIGNED`, `ORDER.CANCELLED` | User has access to the order's tenant and store. |
+| `/user/queue/driver-jobs` | Driver app | `DRIVER.JOB_ASSIGNED`, `DRIVER.JOB_CANCELLED` | Driver is approved and eligible for the assignment. |
+| `/topic/orders/{orderId}/tracking` | Order participants + assigned driver | `DELIVERY.STATUS_CHANGED`, `DELIVERY.LOCATION_UPDATED` | Verify order participation and current driver assignment on every subscribe. |
+| `/topic/conversations/{conversationId}` | Conversation participants | `CHAT.MESSAGE_CREATED`, `CHAT.MESSAGE_READ` | Active conversation participant only; enforce blocks/reports. |
+| `/user/queue/notifications` | One signed-in user | `NOTIFICATION.CREATED` | User-specific, never a public broadcast. |
+| `/user/queue/sync-alerts` | Signed-in user/device | `SYNC.CONFLICT`, `SYNC.REJECTED` | Limit to the requesting user's allowed tenant/device scope. |
+
+Never authorize a subscription just because the client knows an order ID or supplies a tenant/store ID. Implement server-side subscription authorization against the authenticated principal and database relationships.
+
+### Event envelope (server → frontend)
+
+~~~json
+{
+  "eventId": "evt_01J9ORDER",
+  "eventType": "ORDER.STATUS_CHANGED",
+  "schemaVersion": 1,
+  "occurredAt": "2026-10-16T09:15:20Z",
+  "aggregate": {
+    "type": "ORDER",
+    "id": "ord_01J9ABC",
+    "version": 4
+  },
+  "data": {
+    "status": "READY_FOR_PICKUP",
+    "storeId": "str_01J9STORE"
+  },
+  "requestId": "req_01J9"
+}
+~~~
+
+### Message reliability rules
+
+- Commit the order/status change first; publish only after the database transaction succeeds.
+- Include `eventId`, `schemaVersion`, aggregate ID/version and server timestamp. The client ignores duplicate event IDs and stale aggregate versions.
+- On connect/reconnect, reconnect and re-subscribe with a **fresh access token**. Refresh the token via REST; when the token rotates, recreate/reconnect the STOMP client.
+- WebSocket is not a durable history. After reconnect, app resume, a sequence gap or a missed event, fetch the canonical state via REST (`GET /orders/{id}`, `GET /merchant/orders`, `GET /driver/jobs`) and/or use `/sync/pull`.
+- Do not assume a frame sent means the business operation succeeded. Use REST response as the command result; optionally add application-level `eventId` ACKs if the domain requires them.
+- Limit payload sizes, heartbeat, connection rate and location event frequency. Never broadcast raw customer address/phone or driver coordinates to audiences that are not authorized.
+- For a single-node local prototype, Spring's simple in-memory broker is sufficient. For multiple backend replicas/production reliability, use a broker relay (e.g. RabbitMQ STOMP relay) or a dedicated event transport plus a transactional outbox; an in-memory broker does not fan out across replicas.
+
+## 12. Backend implementation — Spring Boot WebSocket
+
+### Dependencies (Maven)
+
+Use the Spring Boot parent/BOM for managed versions; do not mix arbitrary Spring versions. Add the WebSocket, Web, Security, Validation, JPA, PostgreSQL, Flyway and Actuator starters alongside the existing dependencies.
+
+~~~xml
+<dependencies>
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-websocket</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-validation</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-jpa</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <scope>runtime</scope>
+  </dependency>
+  <dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-core</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+  </dependency>
+</dependencies>
+~~~
+
+### WebSocket configuration skeleton
+
+~~~java
+package com.vyavsetu.common.realtime;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+
+@Configuration
+@EnableWebSocketMessageBroker
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+    private final String[] allowedOrigins;
+
+    public WebSocketConfig(
+            @Value("\${app.realtime.allowed-origins}") String[] allowedOrigins) {
+        this.allowedOrigins = allowedOrigins;
+    }
+
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint("/ws").setAllowedOriginPatterns(allowedOrigins);
+        // Add SockJS only if a documented browser fallback is actually needed.
+    }
+
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry registry) {
+        registry.setApplicationDestinationPrefixes("/app");
+        registry.setUserDestinationPrefix("/user");
+        registry.enableSimpleBroker("/topic", "/queue"); // local/single-node only
+        // Production multi-instance option: configureMessageBroker(relay).
+    }
+}
+~~~
+
+### Authenticate the STOMP CONNECT frame
+
+Native WebSocket clients and browsers have different ability to add HTTP handshake headers. Use the STOMP `CONNECT` frame's `Authorization: Bearer <access-token>` header and authenticate it in an inbound `ChannelInterceptor`; do not put the token in a URL query string. Secure the handshake origins separately. After authentication, set the connection's `Principal` and authorize every `SUBSCRIBE` destination.
+
+Illustrative interceptor skeleton (wire `JwtAuthenticator` and `SubscriptionAuthorizer` to the project's actual Spring Security/JWT services):
+
+~~~java
+package com.vyavsetu.common.realtime;
+
+import java.security.Principal;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.simp.stomp.StompCommand;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.stereotype.Component;
+
+@Component
+public class StompAuthenticationInterceptor implements ChannelInterceptor {
+    private final JwtAuthenticator jwtAuthenticator;
+    private final SubscriptionAuthorizer subscriptionAuthorizer;
+
+    public StompAuthenticationInterceptor(
+            JwtAuthenticator jwtAuthenticator,
+            SubscriptionAuthorizer subscriptionAuthorizer) {
+        this.jwtAuthenticator = jwtAuthenticator;
+        this.subscriptionAuthorizer = subscriptionAuthorizer;
+    }
+
+    @Override
+    public Message<?> preSend(Message<?> message, MessageChannel channel) {
+        StompHeaderAccessor accessor =
+            MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+        if (accessor == null) return message;
+
+        if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+            String header = accessor.getFirstNativeHeader("Authorization");
+            if (header == null || !header.startsWith("Bearer ")) {
+                throw new IllegalArgumentException("Missing STOMP bearer token");
+            }
+            Principal principal =
+                jwtAuthenticator.authenticate(header.substring("Bearer ".length()));
+            accessor.setUser(principal);
+        }
+
+        if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+            Principal principal = accessor.getUser();
+            String destination = accessor.getDestination();
+            if (principal == null ||
+                !subscriptionAuthorizer.maySubscribe(principal, destination)) {
+                throw new IllegalArgumentException("Subscription not authorized");
+            }
+        }
+        return message;
+    }
+}
+~~~
+
+Register the interceptor with `configureClientInboundChannel(ChannelRegistration registration)`. Also configure the normal Spring Security HTTP filter chain, CORS/origin allowlist, rate limits, token expiry handling and tests. Never trust tenantId/storeId embedded in a destination without checking access in the database.
+
+### Publish after commit
+
+Domain services should persist the canonical order/status plus an outbox event in the same PostgreSQL transaction. An after-commit worker reads the outbox and publishes a minimal event via `SimpMessagingTemplate`. For a low-volume single instance, an `@TransactionalEventListener(phase = AFTER_COMMIT)` can demonstrate the flow, but a durable transactional outbox is the production choice; otherwise a process crash after commit but before publish can lose the realtime notification.
+
+~~~java
+package com.vyavsetu.common.realtime;
+
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Component;
+
+@Component
+public class RealtimePublisher {
+    private final SimpMessagingTemplate messaging;
+
+    public RealtimePublisher(SimpMessagingTemplate messaging) {
+        this.messaging = messaging;
+    }
+
+    public void publishCustomerOrderUpdate(
+            String customerUserId, Object eventEnvelope) {
+        messaging.convertAndSendToUser(
+            customerUserId, "/queue/order-updates", eventEnvelope);
+    }
+
+    public void publishStoreOrder(
+            String storeUserId, Object eventEnvelope) {
+        messaging.convertAndSendToUser(
+            storeUserId, "/queue/store-orders", eventEnvelope);
+    }
+
+    public void publishDriverJob(
+            String driverUserId, Object eventEnvelope) {
+        messaging.convertAndSendToUser(
+            driverUserId, "/queue/driver-jobs", eventEnvelope);
+    }
+
+    public void publishOrderTracking(String orderId, Object eventEnvelope) {
+        messaging.convertAndSend(
+            "/topic/orders/" + orderId + "/tracking", eventEnvelope);
+    }
+}
+~~~
+
+Use a typed `RealtimeEvent<T>` DTO rather than an arbitrary `Object` in production, and build recipient lists from trusted database relationships. Never let a client choose another user's destination for server publication.
+
+### Backend configuration
+
+Example local profile (set credentials through environment variables; do not commit production secrets):
+
+~~~yaml
+server:
+  port: 8080
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/vyavsetu}
+    username: ${DB_USERNAME:vyavsetu}
+    password: ${DB_PASSWORD:change-me-local}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  jackson:
+    time-zone: UTC
+app:
+  realtime:
+    allowed-origins: ${APP_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,http://localhost:8081}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+~~~
+
+Do not use the example local password in a shared/staging/production environment. Keep production secrets in a secret manager. Flyway owns schema creation; `ddl-auto: validate` only validates.
+
+## 13. Frontend implementation — Flutter Customer / Store / Driver
+
+The frontend has three responsibilities: connect, subscribe to only permitted destinations, and reconcile pushed events with the local database/state. It must **not** treat WebSocket frames as the canonical order record and must not send privileged state changes by arbitrary STOMP messages.
+
+### Dependency and config
+
+Add a maintained Dart STOMP client to each Flutter app (or a shared internal package) and pin the resolved version in `pubspec.lock`:
+
+~~~bash
+flutter pub add stomp_dart_client
+~~~
+
+Provide per-environment values with `--dart-define` (use HTTPS/WSS outside local development):
+
+~~~text
+API_BASE_URL=http://localhost:8080/api/v1
+WS_URL=ws://localhost:8080/ws
+~~~
+
+Android emulator special case: use `http://10.0.2.2:8080/api/v1` and `ws://10.0.2.2:8080/ws` to reach the host computer. A physical phone needs the host computer's reachable LAN IP, firewall access, and a development origin/security configuration. Do not ship cleartext WS/HTTP to production; use HTTPS/WSS and valid certificates.
+
+### Shared Dart client skeleton
+
+Keep one connection per signed-in app session, not one connection per widget. Callbacks should dispatch parsed typed events to the app's BLoC/Cubit/Repository, and repositories then refresh Drift-backed state. Example API shape (adapt error APIs to the pinned package version):
+
+~~~dart
+import 'dart:convert';
+import 'package:stomp_dart_client/stomp_dart_client.dart';
+
+class VyavsetuRealtimeClient {
+  StompClient? _client;
+  final void Function(Map<String, dynamic>) onEvent;
+  final void Function(Object error)? onError;
+
+  VyavsetuRealtimeClient({required this.onEvent, this.onError});
+
+  void connect({
+    required String wsUrl,
+    required String accessToken,
+    required List<String> destinations,
+  }) {
+    disconnect();
+    _client = StompClient(
+      config: StompConfig(
+        url: wsUrl,
+        stompConnectHeaders: {'Authorization': 'Bearer $accessToken'},
+        heartbeatIncoming: const Duration(seconds: 20),
+        heartbeatOutgoing: const Duration(seconds: 20),
+        reconnectDelay: const Duration(seconds: 5),
+        onConnect: (frame) {
+          for (final destination in destinations) {
+            _client?.subscribe(
+              destination: destination,
+              callback: (frame) {
+                final body = frame.body;
+                if (body == null) return;
+                try {
+                  final decoded = jsonDecode(body);
+                  if (decoded is Map<String, dynamic>) onEvent(decoded);
+                } catch (error) {
+                  onError?.call(error); // malformed/outdated event
+                }
+              },
+            );
+          }
+        },
+        onWebSocketError: (dynamic error) => onError?.call(error is Object ? error : Exception('$error')),
+        onStompError: (frame) => onError?.call(Exception(frame.body ?? 'STOMP error')),
+      ),
+    );
+    _client!.activate();
+  }
+
+  void disconnect() {
+    _client?.deactivate();
+    _client = null;
+  }
+}
+~~~
+
+Check the exact constructor/callback types against the resolved `stomp_dart_client` version during implementation; package versions can change. When the access token refreshes, deactivate and create a new connection with the fresh token. Disconnect on logout/account switch and when the session is revoked.
+
+### Subscription sets by app
+
+~~~dart
+// Customer app
+const customerSubscriptions = [
+  '/user/queue/order-updates',
+  '/user/queue/notifications',
+];
+
+// Store app — only if the signed-in staff membership can access that store
+const storeSubscriptions = [
+  '/user/queue/store-orders',
+  '/user/queue/notifications',
+];
+
+// Driver app — only for an approved, signed-in driver
+const driverSubscriptions = [
+  '/user/queue/driver-jobs',
+  '/user/queue/notifications',
+];
+~~~
+
+Subscribe to `/topic/orders/{orderId}/tracking` only while the user is allowed to view that order and its driver tracking. Unsubscribe on leaving the order, logout or loss of permission. These destination strings should match the server configuration exactly.
+
+### Frontend event handling contract
+
+1. User signs in through REST and the app securely stores session credentials using the platform-appropriate secure storage.
+2. App loads its current orders/jobs from REST and immediately displays its Drift/local cached view.
+3. Realtime client connects and subscribes after authentication.
+4. On `ORDER.STATUS_CHANGED`, `DRIVER.JOB_ASSIGNED` or `DELIVERY.LOCATION_UPDATED`, validate the envelope/version; update invalidation/state and refresh the canonical entity through the repository.
+5. Repository/DAO updates the local database; BLoC/Cubit emits the updated view. Ignore duplicate `eventId` values and stale aggregate versions.
+6. When connection returns after a gap, perform a REST/delta-sync reconciliation before assuming the screen is current.
+7. UI commands still call REST, e.g. `POST /merchant/orders/{id}/ready`; the server validates the transition and publishes the resulting event after commit.
+
+For the current **HTML preview only**, do not add a fake WebSocket connection: it continues to use browser localStorage and works in one browser/origin. The shared event contract is for the future Flutter apps and live backend.
+
+## 14. Local development — start backend and frontend end-to-end
+
+The following is the proposed runbook for the backend/frontend projects after they are created. It does not imply that a Java service or Flutter source apps currently exist in this repository.
+
+### A. Start PostgreSQL
+
+Create `docker-compose.dev.yml` outside the existing app code, or in the backend folder:
+
+~~~yaml
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: vyavsetu
+      POSTGRES_USER: vyavsetu
+      POSTGRES_PASSWORD: change-me-local
+    ports:
+      - "5432:5432"
+    volumes:
+      - vyavsetu_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vyavsetu -d vyavsetu"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+volumes:
+  vyavsetu_pgdata:
+~~~
+
+Run from the folder containing that file:
+
+~~~bash
+docker compose -f docker-compose.dev.yml up -d postgres
+docker compose -f docker-compose.dev.yml ps
+~~~
+
+### B. Start Spring Boot
+
+From the backend project root (once scaffolded), configure the environment and launch:
+
+~~~bash
+export DB_URL='jdbc:postgresql://localhost:5432/vyavsetu'
+export DB_USERNAME='vyavsetu'
+export DB_PASSWORD='change-me-local'
+export APP_ALLOWED_ORIGINS='http://localhost:3000,http://localhost:5173,http://localhost:8081'
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+~~~
+
+Verify health once Actuator is included/configured:
+
+~~~bash
+curl -fsS http://localhost:8080/actuator/health
+~~~
+
+Expected health response is `{"status":"UP"}` when the app and required health contributors are ready. Check Flyway migration logs and confirm `ddl-auto: validate` passes before testing realtime.
+
+### C. Start the Flutter frontend
+
+For each Flutter source app folder (paths below are placeholders until the Flutter projects are created):
+
+~~~bash
+cd <customer-flutter-app>
+flutter pub get
+flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8080/api/v1 --dart-define=WS_URL=ws://localhost:8080/ws
+~~~
+
+Use the same configuration approach for Store and Driver. For a physical Android phone, replace localhost with the developer machine's reachable LAN address and allow the development port through the firewall. For Android emulator use 10.0.2.2. Do not use development cleartext traffic in production.
+
+### D. Verify the full realtime flow
+
+1. Sign in as a test customer; create an order via REST. Verify `GET /orders/{orderId}` returns `PENDING_STORE_ACCEPTANCE`.
+2. Sign in as staff for the matching store in a separate client. The Store app receives `STORE.ORDER_ASSIGNED` through `/user/queue/store-orders`.
+3. Use REST to accept and mark the order preparing/ready. After the PostgreSQL commit, the server outbox publishes `ORDER.STATUS_CHANGED`; the Customer app refreshes its order view.
+4. Dispatcher assigns a driver; the Driver app gets `DRIVER.JOB_ASSIGNED`. Driver accepts/picks up/starts/completes through the REST endpoints.
+5. The customer/authorized store subscribes to its allowed tracking topic and receives status/location events. Complete delivery using a server-verified OTP, not a client-side state override.
+6. Stop network briefly and resume it. Verify reconnect/resubscription, REST/sync reconciliation, no duplicate order/payment, and correct current state.
+7. Try an unauthorized user subscribing to another tenant's order topic; the server must deny it and emit an auditable security event.
+
+### E. Troubleshooting
+
+| Symptom | Check |
+|---|---|
+| WebSocket fails before STOMP connects | `/ws` endpoint, HTTP/proxy upgrade headers, allowed Origin, TLS/mixed-content rules, port/firewall. |
+| STOMP reports unauthenticated | CONNECT frame carries current bearer token; interceptor validates it; token hasn't expired. |
+| CONNECT works but SUBSCRIBE is denied | User destination spelling and object-level subscription authorizer. |
+| REST changes succeed but no event arrives | Domain outbox persisted; publisher/relay health; recipient user ID maps to authenticated Principal; event schema/version. |
+| Duplicate/stale cards after reconnect | Dedupe by `eventId`, compare aggregate version, then reconcile by REST/delta cursor. |
+| Works on one instance only | Simple broker is in-memory; use broker relay or shared event transport for multiple replicas. |
+| Browser complains about mixed content | If page is HTTPS, WebSocket must use WSS in production; localhost exceptions are for local development only. |
+
 ## 11. Security, privacy & reliability
 
 - TLS, short-lived access tokens, refresh rotation, password hashing and OTP attempt limits.
@@ -662,7 +1153,7 @@ Java rules:
 - Logs include requestId/tenantId/actorId/module/entity/outcome but omit passwords, OTPs, tokens, card data, full addresses and chat content.
 - Monitor API latency, error rate, checkout failure, sync queue age, webhook lag, outbox retries, inventory conflicts and driver dispatch latency.
 
-## 12. Implementation order
+## 15. Implementation order
 
 1. **Foundation:** API envelope/errors, auth/session, tenant context, permissions, Flyway, request IDs, idempotency and OpenAPI.
 2. **Marketplace slice:** store/catalog → quote/order → merchant accept/ready → driver delivery → customer timeline.
@@ -674,7 +1165,7 @@ Java rules:
 
 Do not implement all 137 endpoints in one unreviewed batch. Ship a narrow end-to-end vertical slice while keeping contracts versioned and testable.
 
-## 13. Acceptance checklist
+## 16. Acceptance checklist
 
 - [ ] All 137 proposal endpoints are represented in OpenAPI with schemas, access, response codes and error model before client integration.
 - [ ] Tests prove a user cannot read another customer's order/address/payment/chat or another tenant's store.
@@ -687,7 +1178,7 @@ Do not implement all 137 endpoints in one unreviewed batch. Ship a narrow end-to
 - [ ] OpenAPI examples match Java DTOs and contract tests.
 - [ ] Current HTML prototype, screens, logic and 36 localStorage keys remain untouched by documentation-only changes.
 
-## 14. Related documents
+## 17. Related documents
 
 - [Architecture & business flowcharts](ARCHITECTURE_FLOWCHARTS.md) · [visual version](architecture-flowcharts.html)
 - [Developer handoff](DEVELOPER_HANDOFF.md) · [visual handoff](developer-handoff.html)
