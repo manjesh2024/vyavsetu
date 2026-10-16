@@ -299,6 +299,7 @@ const { chromium } = require('playwright');
       await app.locator('[data-action="close-dialog"]').last().click();
     }
 
+    await page.locator('#app').evaluate(frame => { frame.contentDocument.getElementById('printRoot').style.display = 'none'; });
     for (const name of ['overview','pos','orders','products','purchases','inventory','suppliers','customers','returns','reports','staff','settings','restaurant','market','driver','admin','plans','subscriptions','support','features','developer']) {
       await go(name);
       assert.ok(await app.locator('main h1').count(), 'Missing page heading: '+name);
