@@ -1,7 +1,7 @@
 # Vyavsetu Demo Verification
 
 ## Automated checks
-GitHub Actions runs JavaScript/feature-hook validation and a Chromium end-to-end test against the local static demo. Latest successful browser E2E run: https://github.com/manjesh2024/vyavsetu/actions/runs/38778676772. Latest successful Pages deploy: https://github.com/manjesh2024/vyavsetu/actions/runs/38778676652. Latest source commit covered by those runs: `9f0d1c0b1779aaa5fb99a45bc4baccd974a58558`.
+GitHub Actions runs JavaScript/feature-hook validation and a Chromium end-to-end test against the local static demo. Latest successful browser E2E run: https://github.com/manjesh2024/vyavsetu/actions/runs/38851123385. Latest successful Pages deploy: https://github.com/manjesh2024/vyavsetu/actions/runs/38851123344. Latest source commit covered by those runs: `22517fe04a101ec073af7efcb0b52c6ddc007657`.
 
 ## Interactions covered by the prototype
 - POS: product add/quantity controls, stock guard, illustrative total calculation, Cash/Dummy UPI/Dummy Card, provisional bill save/resume, clear cart.
@@ -17,8 +17,8 @@ GitHub Actions runs JavaScript/feature-hook validation and a Chromium end-to-end
 - Returns/refunds: create request against a paid POS demo sale; approve/reject; optional restock and demo refund reference.
 - Reports: sales summary, best-selling items, CSV/JSON export.
 - Staff/roles, business settings, SaaS plans/subscriptions, tenants, support tickets and feature flags: browser-local create/update/toggle workflows.
-- Developer Access: brand tokens, responsive guidance, implementation checklist and architecture/business flowcharts.
-- Responsive launcher: auto, desktop, laptop, store POS, tablet/iPad, Android and iPhone viewport presets; Light, Dark, Ocean, Forest and High Contrast themes.
+- Developer Access: brand tokens, responsive guidance, implementation checklist, architecture/business flowcharts and a six-card visual developer documentation library linking handoff, assets, architecture, responsive QA, test report and Hinglish quick start.
+- Responsive shell: no outer launcher/header banner; theme and Desktop/Laptop/Store POS/Tablet/Android/iPhone preview controls are inside the app workspace. The shell remains full-screen in Auto mode and resizes for the selected preview.
 
 ## Dummy payment semantics
 - POS Cash records a demo paid sale only after confirmation.
@@ -32,4 +32,4 @@ GitHub Actions runs JavaScript/feature-hook validation and a Chromium end-to-end
 - Data persists in the current browser's localStorage only; separate devices and browsers do not share changes.
 - No server/API/database, actual authentication/authorization, payment gateway/webhook, statutory tax engine/invoice numbering, physical printer, or cross-device offline sync is connected.
 - Tax, delivery, demo OTP and subscription data are illustrative.
-- Automated Chromium E2E passes for POS product-card taps and quantity controls, approved checkout and exact stock deduction, decline preserving the basket with no order created, timeout recorded as pending without stock deduction, marketplace checkout and customer capture, driver OTP delivery completion with exact order-ID status synchronization and duplicate-customer isolation, customer and supplier creation, simulated return/refund, staff record and business-settings persistence, purchase receiving, product creation, restaurant KDS New → Preparing → Ready → Served transitions, inventory adjustment plus stock history, all module navigation, dark/light theme switch, and phone viewport/overflow checks. This is not a substitute for testing actual iOS/Android/iPad/Windows hardware. Never use this prototype for live sales or real customer data.
+- Automated Chromium E2E passes for POS product-card taps and quantity controls, approved checkout and exact stock deduction, decline preserving the basket with no order created, timeout recorded as pending without stock deduction, marketplace checkout and customer capture, driver OTP delivery completion with exact order-ID status synchronization and duplicate-customer isolation, customer and supplier creation, simulated return/refund, staff record and business-settings persistence, purchase receiving, product creation, restaurant KDS New → Preparing → Ready → Served transitions, inventory adjustment plus stock history, receipt print-layout rendering for 58 mm, 80 mm and A4, all module navigation, Developer Access documentation-card visibility, in-app theme switching, in-app device preview switching, and phone viewport/overflow checks. This validates generated layouts and browser behavior, not physical printer output or actual iOS/Android/iPad/Windows hardware. Never use this prototype for live sales or real customer data.
