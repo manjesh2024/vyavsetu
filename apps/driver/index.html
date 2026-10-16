@@ -32,7 +32,7 @@ let ds={};try{ds=JSON.parse(localStorage.getItem('vyavsetu_delivery_statuses')||
 function syncTaskFromShared(){
 let orders=[];try{orders=JSON.parse(localStorage.getItem('vyavsetu_demo_orders')||'[]')}catch(e){orders=[]}
 let jobs=[];try{jobs=JSON.parse(localStorage.getItem('vyavsetu_driver_jobs')||'[]')}catch(e){jobs=[]}
-let candidates=jobs.filter(j=>{let o=orders.find(x=>String(x.id)===String(j.orderId));return o&&o.source==='market'&&['Ready','Completed'].includes(o.storeStatus)&&j.status!=='Cancelled'}).sort((a,b)=>new Date(b.created||0)-new Date(a.created||0));
+let candidates=jobs.filter(j=>{let o=orders.find(x=>String(x.id)===String(j.orderId));return o&&o.source==='market'&&(!o.storeStatus||['Ready','Completed'].includes(o.storeStatus))&&j.status!=='Cancelled'}).sort((a,b)=>new Date(b.created||0)-new Date(a.created||0));
 if(!candidates.length)return false;
 let job=candidates[0],order=orders.find(o=>String(o.id)===String(job.orderId));
 const states={Available:'new',Assigned:'accepted','Picked up':'picked','Out for delivery':'delivering',Delivered:'delivered',Cancelled:'rejected'};
