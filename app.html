@@ -495,5 +495,6 @@ if(b.matches('[data-print-format]')){printDemoReceipt(b.dataset.printFormat);ret
 document.getElementById('localDevice').addEventListener('change',e=>parent.postMessage({type:'vyavsetu-device',device:e.target.value},'*'));
 window.addEventListener('message',e=>{if(e.data?.type==='vyavsetu-theme'){document.documentElement.dataset.theme=e.data.theme;document.getElementById('localTheme').value=e.data.theme;syncThemeBranding()}if(e.data?.type==='vyavsetu-device'&&document.getElementById('localDevice'))document.getElementById('localDevice').value=e.data.device});
 render();
+window.addEventListener('storage',function(e){if(['vyavsetu_demo_orders','vyavsetu_driver_jobs','vyavsetu_delivery_statuses'].includes(e.key)){demoOrders=readStore('vyavsetu_demo_orders',[]);driverJobs=readStore('vyavsetu_driver_jobs',driverJobs);deliveryStatuses=readStore('vyavsetu_delivery_statuses',{});render()}});
 </script>
 </body></html>
