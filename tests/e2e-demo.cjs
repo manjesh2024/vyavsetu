@@ -284,6 +284,20 @@ const { chromium } = require('playwright');
     assert.equal(settingsSaved.name, 'E2E Business Settings');
     assert.equal(settingsSaved.deliveryFee, 30);
 
+    const receiptIdForPrint = await page.locator('#app').evaluate(frame => {
+      const orders = JSON.parse(frame.contentDocument.defaultView.localStorage.getItem('vyavsetu_demo_orders') || '[]');
+      return orders.find(order => order.source === 'pos' && order.status === 'Paid (dummy)')?.id;
+    });
+    assert.ok(receiptIdForPrint, 'A paid POS order must exist for print layout checks');
+    for (const [format, layoutClass] of [['thermal58','print-thermal-58'],['thermal80','print-thermal-80'],['a4','print-a4']]) {
+      await go('orders');
+      await app.locator('[data-view-order="' + receiptIdForPrint + '"]').click();
+      await app.locator('[data-print-format="' + format + '"]').click();
+      const renderedLayout = await app.locator('#printRoot > article').getAttribute('class');
+      assert.ok(renderedLayout.includes(layoutClass), 'Wrong print layout for ' + format + ': ' + renderedLayout);
+      await app.locator('[data-action="close-dialog"]').last().click();
+    }
+
     for (const name of ['overview','pos','orders','products','purchases','inventory','suppliers','customers','returns','reports','staff','settings','restaurant','market','driver','admin','plans','subscriptions','support','features','developer']) {
       await go(name);
       assert.ok(await app.locator('main h1').count(), 'Missing page heading: '+name);
