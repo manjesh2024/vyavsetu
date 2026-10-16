@@ -289,7 +289,7 @@ const { chromium } = require('playwright');
       return orders.find(order => order.source === 'pos' && order.status === 'Paid (dummy)')?.id;
     });
     assert.ok(receiptIdForPrint, 'A paid POS order must exist for print layout checks');
-    await app.evaluate(() => Object.defineProperty(window, 'print', { value: () => {}, configurable: true }));
+    await page.locator('#app').evaluate(frame => Object.defineProperty(frame.contentWindow, 'print', { value: () => {}, configurable: true }));
     for (const [format, layoutClass] of [['thermal58','print-thermal-58'],['thermal80','print-thermal-80'],['a4','print-a4']]) {
       await go('orders');
       await app.locator('[data-view-order="' + receiptIdForPrint + '"]').click();
