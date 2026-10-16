@@ -27,7 +27,7 @@
 | Offline sync | 3 |
 | **Total** | **137** |
 
-The count includes the business REST routes below. Health/OpenAPI endpoints, static content, a future media-upload-intent route and optional WebSocket/SSE destinations are infrastructure additions outside that count.
+The count includes only business REST routes below. Health/OpenAPI endpoints, static content, media-upload infrastructure, and WebSocket/STOMP transport destinations are infrastructure capabilities and are not counted as REST business endpoints.
 
 ## 2. Target architecture
 
@@ -52,14 +52,17 @@ flowchart LR
   LDB --> OUT[Transactional local outbox]
   OUT --> API
   MOD --> EVT[Server outbox / worker]
-  EVT --> PUSH[Push / SSE or WebSocket]
+  EVT --> WS[WebSocket / STOMP live events]
+  EVT --> PUSH[Push notifications for background/offline apps]
 ~~~
 
 - Client apps: Flutter Android/iOS for Customer, Driver and Store; Flutter Web/Desktop for POS, Business Admin and Super Admin as agreed. Current HTML pages remain preview surfaces.
+- Realtime: authenticated WebSocket/STOMP is a required production transport for live order/status, store dispatch, driver job/tracking and chat updates. Push notifications cover important changes while apps are backgrounded/terminated; REST and delta sync recover gaps.
 - API: HTTPS JSON, versioned /api/v1. Start as one modular monolith, not a premature microservice fleet.
 - PostgreSQL is the shared source of truth. Browser localStorage is not a multi-device database.
 - Offline POS: Drift/SQLite writes the business row plus outbox event in one local transaction; render local state immediately, then push idempotently.
 - Product images, chat media and delivery proof belong in authorized object storage/media flows, not localStorage.
+- **Production live-update requirement:** implement authenticated WebSocket/STOMP for foreground Customer, Store and Driver updates (order lifecycle, dispatch, tracking and chat). This is required in the production application, not in the HTML demo. Use push notifications (FCM/APNs) when apps are backgrounded or terminated, and REST/delta sync to recover missed events.
 
 ## 3. API conventions
 
@@ -656,9 +659,9 @@ Java rules:
 
 ### Decision and boundary
 
-Use **WebSocket with STOMP 1.2** for server-pushed updates in Customer, Store and Driver apps. Keep **REST as the authoritative command/read API** for checkout/order creation, store accept/reject/preparing/ready/handover, driver accept/pickup/start/complete, payment reconciliation and message creation. WebSocket publishes committed changes; it is not a second database and does not replace the 137 REST operations.
+**Production requirement:** implement **WebSocket with STOMP 1.2** on both backend and frontend for server-pushed live updates in Customer, Store and Driver apps. This is required for the planned live order/dispatch/tracking experience. Keep **REST as the authoritative command/read API** Keep **REST as the authoritative command/read API** for checkout/order creation, store accept/reject/preparing/ready/handover, driver accept/pickup/start/complete, payment reconciliation and message creation. WebSocket publishes committed changes; it is not a second database and does not replace the 137 REST operations.
 
-This is the proposed production design. The current HTML Customer/Store/Driver previews do **not** connect to a WebSocket server, and this repository does not yet contain a production Java backend or Flutter app projects. Do not add WebSocket calls to the existing previews as part of the documentation-only task.
+The production app must implement this WebSocket design. The current HTML Customer/Store/Driver previews remain browser-local and do **not** connect to a WebSocket server; this documentation-only task does not add realtime code to the demo. The Java backend and Flutter app projects must implement the connection, authorization, event publishing and client subscriptions when those applications are built.
 
 ### Connection and destinations
 
@@ -714,6 +717,7 @@ Never authorize a subscription just because the client knows an order ID or supp
 - WebSocket is not a durable history. After reconnect, app resume, a sequence gap or a missed event, fetch the canonical state via REST (`GET /orders/{id}`, `GET /merchant/orders`, `GET /driver/jobs`) and/or use `/sync/pull`.
 - Do not assume a frame sent means the business operation succeeded. Use REST response as the command result; optionally add application-level `eventId` ACKs if the domain requires them.
 - Limit payload sizes, heartbeat, connection rate and location event frequency. Never broadcast raw customer address/phone or driver coordinates to audiences that are not authorized.
+- WebSocket is for foreground/live connectivity, not a guarantee of background delivery. Production must send push notifications (FCM/APNs) for important order/job changes when an app is backgrounded or terminated; on resume, reconcile state over REST/delta sync.
 - For a single-node local prototype, Spring's simple in-memory broker is sufficient. For multiple backend replicas/production reliability, use a broker relay (e.g. RabbitMQ STOMP relay) or a dedicated event transport plus a transactional outbox; an in-memory broker does not fan out across replicas.
 
 ## 12. Backend implementation — Spring Boot WebSocket
