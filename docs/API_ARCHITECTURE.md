@@ -78,143 +78,143 @@ Paths are relative to /api/v1. “—” means no JSON body. Query parameters ar
 
 | # | Module | Method | Endpoint | Access | Request body / query | Success data |
 |---:|---|---|---|---|---|---|
-| 001 | Identity & sessions | POST | /auth/register | Public | displayName, email or phone, password | AuthSession |
-| 002 | Identity & sessions | POST | /auth/login | Public | identifier, password | AuthSession |
-| 003 | Identity & sessions | POST | /auth/otp/request | Public | phone, purpose | challengeId, expiry, resendAfter |
-| 004 | Identity & sessions | POST | /auth/otp/verify | Public | challengeId, otp | AuthSession |
-| 005 | Identity & sessions | POST | /auth/token/refresh | Refresh token | refreshToken | AuthSession; rotated refresh token |
-| 006 | Identity & sessions | POST | /auth/logout | Authenticated | refreshToken? | 204 |
-| 007 | Identity & sessions | GET | /auth/me | Authenticated | — | UserProfile |
-| 008 | Identity & sessions | GET | /auth/memberships | Authenticated | — | Membership[] |
-| 009 | Tenant, store & RBAC | GET | /tenants/current | Authenticated | — | TenantContext |
-| 010 | Tenant, store & RBAC | GET | /tenants/{tenantId}/stores | Tenant member | status?, cursor, limit | Page<Store> |
-| 011 | Tenant, store & RBAC | POST | /tenants/{tenantId}/stores | Tenant admin | name, type, currency, timezone, address | Store |
-| 012 | Tenant, store & RBAC | GET | /stores/{storeId} | Public-safe fields or store member | — | Store |
-| 013 | Tenant, store & RBAC | PATCH | /stores/{storeId} | Store admin | name?, address?, status?, contact? | Store |
-| 014 | Tenant, store & RBAC | GET | /stores/{storeId}/hours | Public | — | WeeklyHours[] |
-| 015 | Tenant, store & RBAC | PUT | /stores/{storeId}/hours | Store admin | weeklyHours[] | WeeklyHours[] |
-| 016 | Tenant, store & RBAC | GET | /tenants/{tenantId}/members | Tenant admin | status?, cursor, limit | Page<Member> |
-| 017 | Tenant, store & RBAC | POST | /tenants/{tenantId}/members | Tenant admin | userId or invitation, roleIds[], storeIds[] | Member |
-| 018 | Tenant, store & RBAC | PATCH | /tenants/{tenantId}/members/{memberId} | Tenant admin | status?, storeIds?, displayName? | Member |
-| 019 | Tenant, store & RBAC | GET | /roles | Authenticated | scope? | Role[] |
-| 020 | Tenant, store & RBAC | GET | /permissions | Authenticated | — | Permission[] |
-| 021 | Tenant, store & RBAC | PUT | /members/{memberId}/roles | Tenant admin | roleIds[] | MemberRoles |
-| 022 | Customer profile & notifications | GET | /customer/profile | Customer | — | CustomerProfile |
-| 023 | Customer profile & notifications | PATCH | /customer/profile | Customer | displayName?, email?, phone?, photoAssetId? | CustomerProfile |
-| 024 | Customer profile & notifications | GET | /customer/addresses | Customer | — | Address[] |
-| 025 | Customer profile & notifications | POST | /customer/addresses | Customer | label, recipient, phone, address, lat?, lng? | Address |
-| 026 | Customer profile & notifications | PATCH | /customer/addresses/{addressId} | Customer | address fields? | Address |
-| 027 | Customer profile & notifications | DELETE | /customer/addresses/{addressId} | Customer | — | 204 |
-| 028 | Customer profile & notifications | GET | /customer/payment-methods | Customer | — | PaymentMethod[]; masked only |
-| 029 | Customer profile & notifications | POST | /customer/payment-methods/setup-intents | Customer | provider, returnUrl? | SetupIntent |
-| 030 | Customer profile & notifications | DELETE | /customer/payment-methods/{paymentMethodId} | Customer | — | 204 |
-| 031 | Customer profile & notifications | PUT | /devices/{deviceId}/push-token | Authenticated | platform, pushToken, appVersion, locale | DeviceRegistration |
-| 032 | Customer profile & notifications | GET | /notifications | Authenticated | unreadOnly?, cursor, limit | Page<Notification> |
-| 033 | Customer profile & notifications | POST | /notifications/{notificationId}/read | Authenticated | — | Notification |
-| 034 | Store discovery, catalogue & coupons | GET | /stores | Public | q?, categoryId?, lat?, lng?, radiusKm?, openNow?, cursor, limit | Page<StoreCard> |
-| 035 | Store discovery, catalogue & coupons | GET | /stores/{storeId}/products | Public | q?, categoryId?, availableOnly?, cursor, limit | Page<ProductCard> |
-| 036 | Store discovery, catalogue & coupons | GET | /catalog/categories | Public | storeId?, parentId? | Category[] |
-| 037 | Store discovery, catalogue & coupons | GET | /products/{productId} | Public | — | ProductDetail |
-| 038 | Store discovery, catalogue & coupons | POST | /merchant/products | Store product permission | name, sku?, categoryId, unit, priceMinor, currency, taxCode? | Product |
-| 039 | Store discovery, catalogue & coupons | PATCH | /merchant/products/{productId} | Store product permission | name?, categoryId?, unit?, priceMinor?, taxCode? | Product |
-| 040 | Store discovery, catalogue & coupons | DELETE | /merchant/products/{productId} | Store admin | — | 204 |
-| 041 | Store discovery, catalogue & coupons | PUT | /merchant/products/{productId}/availability | Store staff | available, stockPolicy? | StoreProductAvailability |
-| 042 | Store discovery, catalogue & coupons | GET | /coupons | Public or Customer | storeId?, activeOnly? | CouponCard[] |
-| 043 | Store discovery, catalogue & coupons | POST | /coupons/validate | Customer | code, storeId, items[] | CouponQuote |
-| 044 | Checkout, orders, payments & tracking | POST | /checkout/quote | Customer | storeId, fulfilmentType, addressId?, items[], couponCode? | CheckoutQuote |
-| 045 | Checkout, orders, payments & tracking | POST | /orders | Customer | quoteId, clientOrderId, fulfilmentType, addressId?, paymentMethod, customerNote? | Order |
-| 046 | Checkout, orders, payments & tracking | GET | /orders | Customer or authorized staff | status?, storeId?, from?, to?, cursor, limit | Page<OrderSummary> |
-| 047 | Checkout, orders, payments & tracking | GET | /orders/{orderId} | Order participant or authorized staff | — | OrderDetail |
-| 048 | Checkout, orders, payments & tracking | GET | /orders/{orderId}/timeline | Order participant | — | OrderTimelineEvent[] |
-| 049 | Checkout, orders, payments & tracking | POST | /orders/{orderId}/cancel | Customer or authorized staff | reasonCode, note? | Order + cancellation/refund state |
-| 050 | Checkout, orders, payments & tracking | POST | /orders/{orderId}/reorder | Customer | addressId?, substitutionsAllowed? | CartDraft |
-| 051 | Checkout, orders, payments & tracking | POST | /orders/{orderId}/payment-intents | Customer | provider, paymentMethodId? | PaymentIntent |
-| 052 | Checkout, orders, payments & tracking | GET | /payments/{paymentId} | Payment owner or authorized staff | — | PaymentStatus |
-| 053 | Checkout, orders, payments & tracking | POST | /payments/{paymentId}/reconcile | Payment owner or authorized staff | clientObservedStatus? | PaymentStatus |
-| 054 | Checkout, orders, payments & tracking | POST | /webhooks/payments/{provider} | Signed provider webhook | Provider event JSON | 200 acknowledgement |
-| 055 | Checkout, orders, payments & tracking | POST | /orders/{orderId}/reviews | Customer with completed order | rating, comment?, productRatings? | Review |
-| 056 | Checkout, orders, payments & tracking | GET | /orders/{orderId}/tracking | Order participant or assigned driver | — | OrderTracking |
-| 057 | Checkout, orders, payments & tracking | POST | /orders/{orderId}/chat-conversations | Order participant | participantId | Conversation |
-| 058 | Chat & safety | GET | /conversations | Authenticated participant | orderId?, cursor, limit | Page<Conversation> |
-| 059 | Chat & safety | GET | /conversations/{conversationId}/messages | Conversation participant | before?, limit | Page<Message> |
-| 060 | Chat & safety | POST | /conversations/{conversationId}/messages | Conversation participant | clientMessageId, text?, attachmentIds[], replyToMessageId? | Message |
-| 061 | Chat & safety | POST | /messages/{messageId}/reports | Conversation participant | reasonCode, details? | SafetyReport |
-| 062 | Chat & safety | POST | /conversations/{conversationId}/blocks | Conversation participant | blockedUserId, reason? | BlockRecord |
-| 063 | Merchant orders, earnings & payouts | GET | /merchant/orders | Store staff | status?, from?, to?, cursor, limit | Page<MerchantOrder> |
-| 064 | Merchant orders, earnings & payouts | GET | /merchant/orders/{orderId} | Store staff | — | MerchantOrderDetail |
-| 065 | Merchant orders, earnings & payouts | POST | /merchant/orders/{orderId}/accept | Store staff | estimatedPrepMinutes?, note? | OrderStatusResult |
-| 066 | Merchant orders, earnings & payouts | POST | /merchant/orders/{orderId}/reject | Store staff | reasonCode, note? | OrderCancellationResult |
-| 067 | Merchant orders, earnings & payouts | POST | /merchant/orders/{orderId}/preparing | Store staff | expectedReadyAt? | OrderStatusResult |
-| 068 | Merchant orders, earnings & payouts | POST | /merchant/orders/{orderId}/ready | Store staff | readyItems? | OrderStatusResult + DispatchSummary |
-| 069 | Merchant orders, earnings & payouts | POST | /merchant/orders/{orderId}/handover | Store staff | driverJobId, handoverCode? | OrderStatusResult |
-| 070 | Merchant orders, earnings & payouts | GET | /merchant/earnings | Store owner/accounting | from, to, currency? | EarningsReport |
-| 071 | Merchant orders, earnings & payouts | GET | /merchant/payouts | Store owner/accounting | status?, cursor, limit | Page<Payout> |
-| 072 | Driver, route & proof of delivery | GET | /driver/profile | Driver | — | DriverProfile |
-| 073 | Driver, route & proof of delivery | PATCH | /driver/profile | Driver | displayName?, photoAssetId?, locale?, emergencyContact? | DriverProfile |
-| 074 | Driver, route & proof of delivery | PATCH | /driver/availability | Driver | availability, location? | DriverAvailability |
-| 075 | Driver, route & proof of delivery | GET | /driver/jobs | Driver | status?, cursor, limit | Page<DriverJob> |
-| 076 | Driver, route & proof of delivery | POST | /driver/jobs/{jobId}/accept | Driver | acceptedAtClient? | DriverJob |
-| 077 | Driver, route & proof of delivery | POST | /driver/jobs/{jobId}/reject | Driver | reasonCode | DriverJob |
-| 078 | Driver, route & proof of delivery | POST | /driver/jobs/{jobId}/pickup | Assigned driver | pickupCode?, itemsVerified? | DriverJob |
-| 079 | Driver, route & proof of delivery | POST | /driver/jobs/{jobId}/start | Assigned driver | startedAtClient? | DriverJob |
-| 080 | Driver, route & proof of delivery | POST | /driver/jobs/{jobId}/location | Assigned driver | lat, lng, accuracyM?, heading?, speedMps?, capturedAt | LocationAcknowledgement |
-| 081 | Driver, route & proof of delivery | POST | /driver/jobs/{jobId}/complete | Assigned driver | otp, proofAssetIds[], note? | DriverJob + OrderStatus |
-| 082 | Driver, route & proof of delivery | GET | /driver/jobs/{jobId}/route | Assigned driver | destination=STORE or CUSTOMER | RouteSummary |
-| 083 | Driver, route & proof of delivery | GET | /driver/deliveries | Driver | from?, to?, cursor, limit | Page<DeliveryHistoryItem> |
-| 084 | Driver, route & proof of delivery | POST | /driver/deliveries/{deliveryId}/proof | Assigned driver | multipart file, type, note? | ProofAsset |
-| 085 | POS, bills, invoices & printing | GET | /pos/catalog | Authenticated store staff | q?, categoryId?, updatedSince? | CatalogDelta/Page<Product> |
-| 086 | POS, bills, invoices & printing | POST | /pos/quotes | Store staff | storeId, lines[], customerId?, discountCode? | POSQuote |
-| 087 | POS, bills, invoices & printing | POST | /pos/sales | Store staff or offline sync | clientSaleId, lines[], customerId?, paymentLines[], occurredAt, deviceId | Sale |
-| 088 | POS, bills, invoices & printing | GET | /pos/sales | Store staff/accounting | from, to, status?, cursor, limit | Page<SaleSummary> |
-| 089 | POS, bills, invoices & printing | GET | /pos/sales/{saleId} | Store staff/accounting | — | SaleDetail |
-| 090 | POS, bills, invoices & printing | POST | /pos/sales/{saleId}/payments | Store staff | method, amountMinor, currency, providerReference? | PaymentRecord |
-| 091 | POS, bills, invoices & printing | POST | /pos/sales/{saleId}/finalize | Store staff/accounting | finalizationRequestId, taxContextVersion? | Invoice |
-| 092 | POS, bills, invoices & printing | GET | /invoices/{invoiceId} | Invoice owner or authorized staff | — | InvoiceDocument |
-| 093 | POS, bills, invoices & printing | POST | /invoices/{invoiceId}/print-jobs | Authorized staff/device | printerId?, format, copies? | PrintJob |
-| 094 | POS, bills, invoices & printing | GET | /print-jobs/{printJobId} | Authorized staff/device | — | PrintJob |
-| 095 | POS, bills, invoices & printing | POST | /pos/provisional-bills | Store staff/device | clientBillId, lines[], customerId?, note? | ProvisionalBill |
-| 096 | POS, bills, invoices & printing | GET | /pos/provisional-bills | Store staff/device | status?, cursor, limit | Page<ProvisionalBill> |
-| 097 | POS, bills, invoices & printing | POST | /pos/provisional-bills/{billId}/resume | Store staff/device | deviceId | ProvisionalBill |
-| 098 | Inventory, suppliers, purchasing & reports | GET | /inventory/items | Store staff | q?, lowStock?, cursor, limit | Page<InventoryItem> |
-| 099 | Inventory, suppliers, purchasing & reports | GET | /inventory/movements | Store staff/auditor | itemId?, from?, to?, cursor, limit | Page<InventoryMovement> |
-| 100 | Inventory, suppliers, purchasing & reports | POST | /inventory/movements | Authorized stock operator | itemId, locationId, movementType, quantity, sourceType, sourceId, reason | InventoryMovement |
-| 101 | Inventory, suppliers, purchasing & reports | POST | /inventory/adjustments | Stock manager | itemId, countedQuantity, reason, expectedVersion | InventoryAdjustmentResult |
-| 102 | Inventory, suppliers, purchasing & reports | GET | /suppliers | Store staff | q?, active?, cursor, limit | Page<Supplier> |
-| 103 | Inventory, suppliers, purchasing & reports | POST | /suppliers | Store admin | name, contactName?, email?, phone?, address? | Supplier |
-| 104 | Inventory, suppliers, purchasing & reports | PATCH | /suppliers/{supplierId} | Store admin | name?, contactName?, email?, phone?, address?, status? | Supplier |
-| 105 | Inventory, suppliers, purchasing & reports | GET | /purchase-orders | Store staff | status?, supplierId?, cursor, limit | Page<PurchaseOrder> |
-| 106 | Inventory, suppliers, purchasing & reports | POST | /purchase-orders | Store staff | supplierId, storeId, lines[], expectedAt?, notes? | PurchaseOrder |
-| 107 | Inventory, suppliers, purchasing & reports | POST | /purchase-orders/{purchaseOrderId}/submit | Purchasing permission | expectedVersion | PurchaseOrder |
-| 108 | Inventory, suppliers, purchasing & reports | POST | /purchase-orders/{purchaseOrderId}/receive | Store staff | receiptId, lines[{lineId, receivedQuantity}], receivedAt | PurchaseReceipt |
-| 109 | Inventory, suppliers, purchasing & reports | GET | /reports/sales | Owner/accounting | from, to, storeId?, groupBy? | SalesReport |
-| 110 | Inventory, suppliers, purchasing & reports | GET | /reports/profit-loss | Owner/accounting | from, to, storeId?, basis? | ProfitLossReport |
-| 111 | SaaS & Web Admin | GET | /admin/overview | Platform admin | from?, to? | AdminOverview |
-| 112 | SaaS & Web Admin | GET | /admin/businesses | Platform admin | q?, status?, categoryId?, cursor, limit | Page<TenantSummary> |
-| 113 | SaaS & Web Admin | POST | /admin/businesses | Platform admin | name, legalName?, categoryId, owner, planId, timezone, currency | TenantOnboardingResult |
-| 114 | SaaS & Web Admin | GET | /admin/business-categories | Platform admin | active? | BusinessCategory[] |
-| 115 | SaaS & Web Admin | POST | /admin/business-categories | Platform admin | name, slug, description?, status | BusinessCategory |
-| 116 | SaaS & Web Admin | GET | /admin/plans | Platform admin | status? | SubscriptionPlan[] |
-| 117 | SaaS & Web Admin | POST | /admin/plans | Platform admin | name, priceMinor, currency, billingPeriod, entitlements[] | SubscriptionPlan |
-| 118 | SaaS & Web Admin | PATCH | /admin/plans/{planId} | Platform admin | name?, priceMinor?, status?, entitlements? | SubscriptionPlan |
-| 119 | SaaS & Web Admin | GET | /admin/subscriptions | Platform admin/billing admin | tenantId?, status?, cursor, limit | Page<Subscription> |
-| 120 | SaaS & Web Admin | POST | /admin/subscriptions | Platform admin/billing admin | tenantId, planId, startsAt, trialEndsAt? | Subscription |
-| 121 | SaaS & Web Admin | PATCH | /admin/subscriptions/{subscriptionId} | Platform admin/billing admin | status?, planId?, endsAt?, reason | Subscription |
-| 122 | SaaS & Web Admin | GET | /admin/staff | Platform admin | tenantId?, cursor, limit | Page<PlatformStaff> |
-| 123 | SaaS & Web Admin | POST | /admin/staff | Platform admin | userId or invitation, platformRoleIds[] | PlatformStaff |
-| 124 | SaaS & Web Admin | PUT | /admin/staff/{memberId}/roles | Platform admin | roleIds[] | PlatformStaffRoles |
-| 125 | SaaS & Web Admin | GET | /admin/advertising/campaigns | Platform admin/marketing | status?, cursor, limit | Page<AdCampaign> |
-| 126 | SaaS & Web Admin | POST | /admin/advertising/campaigns | Platform admin/marketing | name, audience, placement, startsAt, endsAt, budgetMinor? | AdCampaign |
-| 127 | SaaS & Web Admin | GET | /admin/messages | Platform support | status?, cursor, limit | Page<ContactMessage> |
-| 128 | SaaS & Web Admin | GET | /admin/cms/pages | Platform content admin | status?, locale? | Page<CmsPage> |
-| 129 | SaaS & Web Admin | PUT | /admin/cms/pages/{pageId} | Platform content admin | title, slug, locale, content, status, version | CmsPage |
-| 130 | SaaS & Web Admin | GET | /admin/settings | Platform admin | group? | AdminSettings |
-| 131 | SaaS & Web Admin | PATCH | /admin/settings | Platform admin | settingsPatch, expectedVersion | AdminSettings |
-| 132 | SaaS & Web Admin | GET | /admin/audit-logs | Platform auditor | actorId?, action?, from?, to?, cursor, limit | Page<AuditEvent> |
-| 133 | SaaS & Web Admin | GET | /admin/feature-flags | Platform admin | — | FeatureFlag[] |
-| 134 | SaaS & Web Admin | PATCH | /admin/feature-flags/{flagId} | Platform admin | enabled, rolloutPercent?, reason | FeatureFlag |
-| 135 | Offline sync | POST | /sync/push | Authenticated device + tenant membership | deviceId, batchId, events[] | SyncPushResult[]: ACK/CONFLICT/REJECTED |
-| 136 | Offline sync | GET | /sync/pull | Authenticated device + tenant membership | cursor?, limit, modules[]? | SyncDelta + nextCursor |
-| 137 | Offline sync | GET | /sync/operations/{idempotencyKey} | Mutation owner / tenant member | — | OperationStatus |
+| 001 | Identity & sessions | `POST` | `/auth/register` | Public | displayName, email or phone, password | AuthSession |
+| 002 | Identity & sessions | `POST` | `/auth/login` | Public | identifier, password | AuthSession |
+| 003 | Identity & sessions | `POST` | `/auth/otp/request` | Public | phone, purpose | challengeId, expiry, resendAfter |
+| 004 | Identity & sessions | `POST` | `/auth/otp/verify` | Public | challengeId, otp | AuthSession |
+| 005 | Identity & sessions | `POST` | `/auth/token/refresh` | Refresh token | refreshToken | AuthSession; rotated refresh token |
+| 006 | Identity & sessions | `POST` | `/auth/logout` | Authenticated | refreshToken? | 204 |
+| 007 | Identity & sessions | `GET` | `/auth/me` | Authenticated | — | UserProfile |
+| 008 | Identity & sessions | `GET` | `/auth/memberships` | Authenticated | — | Membership[] |
+| 009 | Tenant, store & RBAC | `GET` | `/tenants/current` | Authenticated | — | TenantContext |
+| 010 | Tenant, store & RBAC | `GET` | `/tenants/{tenantId}/stores` | Tenant member | status?, cursor, limit | Page<Store> |
+| 011 | Tenant, store & RBAC | `POST` | `/tenants/{tenantId}/stores` | Tenant admin | name, type, currency, timezone, address | Store |
+| 012 | Tenant, store & RBAC | `GET` | `/stores/{storeId}` | Public-safe fields or store member | — | Store |
+| 013 | Tenant, store & RBAC | `PATCH` | `/stores/{storeId}` | Store admin | name?, address?, status?, contact? | Store |
+| 014 | Tenant, store & RBAC | `GET` | `/stores/{storeId}/hours` | Public | — | WeeklyHours[] |
+| 015 | Tenant, store & RBAC | `PUT` | `/stores/{storeId}/hours` | Store admin | weeklyHours[] | WeeklyHours[] |
+| 016 | Tenant, store & RBAC | `GET` | `/tenants/{tenantId}/members` | Tenant admin | status?, cursor, limit | Page<Member> |
+| 017 | Tenant, store & RBAC | `POST` | `/tenants/{tenantId}/members` | Tenant admin | userId or invitation, roleIds[], storeIds[] | Member |
+| 018 | Tenant, store & RBAC | `PATCH` | `/tenants/{tenantId}/members/{memberId}` | Tenant admin | status?, storeIds?, displayName? | Member |
+| 019 | Tenant, store & RBAC | `GET` | `/roles` | Authenticated | scope? | Role[] |
+| 020 | Tenant, store & RBAC | `GET` | `/permissions` | Authenticated | — | Permission[] |
+| 021 | Tenant, store & RBAC | `PUT` | `/members/{memberId}/roles` | Tenant admin | roleIds[] | MemberRoles |
+| 022 | Customer profile & notifications | `GET` | `/customer/profile` | Customer | — | CustomerProfile |
+| 023 | Customer profile & notifications | `PATCH` | `/customer/profile` | Customer | displayName?, email?, phone?, photoAssetId? | CustomerProfile |
+| 024 | Customer profile & notifications | `GET` | `/customer/addresses` | Customer | — | Address[] |
+| 025 | Customer profile & notifications | `POST` | `/customer/addresses` | Customer | label, recipient, phone, address, lat?, lng? | Address |
+| 026 | Customer profile & notifications | `PATCH` | `/customer/addresses/{addressId}` | Customer | address fields? | Address |
+| 027 | Customer profile & notifications | `DELETE` | `/customer/addresses/{addressId}` | Customer | — | 204 |
+| 028 | Customer profile & notifications | `GET` | `/customer/payment-methods` | Customer | — | PaymentMethod[]; masked only |
+| 029 | Customer profile & notifications | `POST` | `/customer/payment-methods/setup-intents` | Customer | provider, returnUrl? | SetupIntent |
+| 030 | Customer profile & notifications | `DELETE` | `/customer/payment-methods/{paymentMethodId}` | Customer | — | 204 |
+| 031 | Customer profile & notifications | `PUT` | `/devices/{deviceId}/push-token` | Authenticated | platform, pushToken, appVersion, locale | DeviceRegistration |
+| 032 | Customer profile & notifications | `GET` | `/notifications` | Authenticated | unreadOnly?, cursor, limit | Page<Notification> |
+| 033 | Customer profile & notifications | `POST` | `/notifications/{notificationId}/read` | Authenticated | — | Notification |
+| 034 | Store discovery, catalogue & coupons | `GET` | `/stores` | Public | q?, categoryId?, lat?, lng?, radiusKm?, openNow?, cursor, limit | Page<StoreCard> |
+| 035 | Store discovery, catalogue & coupons | `GET` | `/stores/{storeId}/products` | Public | q?, categoryId?, availableOnly?, cursor, limit | Page<ProductCard> |
+| 036 | Store discovery, catalogue & coupons | `GET` | `/catalog/categories` | Public | storeId?, parentId? | Category[] |
+| 037 | Store discovery, catalogue & coupons | `GET` | `/products/{productId}` | Public | — | ProductDetail |
+| 038 | Store discovery, catalogue & coupons | `POST` | `/merchant/products` | Store product permission | name, sku?, categoryId, unit, priceMinor, currency, taxCode? | Product |
+| 039 | Store discovery, catalogue & coupons | `PATCH` | `/merchant/products/{productId}` | Store product permission | name?, categoryId?, unit?, priceMinor?, taxCode? | Product |
+| 040 | Store discovery, catalogue & coupons | `DELETE` | `/merchant/products/{productId}` | Store admin | — | 204 |
+| 041 | Store discovery, catalogue & coupons | `PUT` | `/merchant/products/{productId}/availability` | Store staff | available, stockPolicy? | StoreProductAvailability |
+| 042 | Store discovery, catalogue & coupons | `GET` | `/coupons` | Public or Customer | storeId?, activeOnly? | CouponCard[] |
+| 043 | Store discovery, catalogue & coupons | `POST` | `/coupons/validate` | Customer | code, storeId, items[] | CouponQuote |
+| 044 | Checkout, orders, payments & tracking | `POST` | `/checkout/quote` | Customer | storeId, fulfilmentType, addressId?, items[], couponCode? | CheckoutQuote |
+| 045 | Checkout, orders, payments & tracking | `POST` | `/orders` | Customer | quoteId, clientOrderId, fulfilmentType, addressId?, paymentMethod, customerNote? | Order |
+| 046 | Checkout, orders, payments & tracking | `GET` | `/orders` | Customer or authorized staff | status?, storeId?, from?, to?, cursor, limit | Page<OrderSummary> |
+| 047 | Checkout, orders, payments & tracking | `GET` | `/orders/{orderId}` | Order participant or authorized staff | — | OrderDetail |
+| 048 | Checkout, orders, payments & tracking | `GET` | `/orders/{orderId}/timeline` | Order participant | — | OrderTimelineEvent[] |
+| 049 | Checkout, orders, payments & tracking | `POST` | `/orders/{orderId}/cancel` | Customer or authorized staff | reasonCode, note? | Order + cancellation/refund state |
+| 050 | Checkout, orders, payments & tracking | `POST` | `/orders/{orderId}/reorder` | Customer | addressId?, substitutionsAllowed? | CartDraft |
+| 051 | Checkout, orders, payments & tracking | `POST` | `/orders/{orderId}/payment-intents` | Customer | provider, paymentMethodId? | PaymentIntent |
+| 052 | Checkout, orders, payments & tracking | `GET` | `/payments/{paymentId}` | Payment owner or authorized staff | — | PaymentStatus |
+| 053 | Checkout, orders, payments & tracking | `POST` | `/payments/{paymentId}/reconcile` | Payment owner or authorized staff | clientObservedStatus? | PaymentStatus |
+| 054 | Checkout, orders, payments & tracking | `POST` | `/webhooks/payments/{provider}` | Signed provider webhook | Provider event JSON | 200 acknowledgement |
+| 055 | Checkout, orders, payments & tracking | `POST` | `/orders/{orderId}/reviews` | Customer with completed order | rating, comment?, productRatings? | Review |
+| 056 | Checkout, orders, payments & tracking | `GET` | `/orders/{orderId}/tracking` | Order participant or assigned driver | — | OrderTracking |
+| 057 | Checkout, orders, payments & tracking | `POST` | `/orders/{orderId}/chat-conversations` | Order participant | participantId | Conversation |
+| 058 | Chat & safety | `GET` | `/conversations` | Authenticated participant | orderId?, cursor, limit | Page<Conversation> |
+| 059 | Chat & safety | `GET` | `/conversations/{conversationId}/messages` | Conversation participant | before?, limit | Page<Message> |
+| 060 | Chat & safety | `POST` | `/conversations/{conversationId}/messages` | Conversation participant | clientMessageId, text?, attachmentIds[], replyToMessageId? | Message |
+| 061 | Chat & safety | `POST` | `/messages/{messageId}/reports` | Conversation participant | reasonCode, details? | SafetyReport |
+| 062 | Chat & safety | `POST` | `/conversations/{conversationId}/blocks` | Conversation participant | blockedUserId, reason? | BlockRecord |
+| 063 | Merchant orders, earnings & payouts | `GET` | `/merchant/orders` | Store staff | status?, from?, to?, cursor, limit | Page<MerchantOrder> |
+| 064 | Merchant orders, earnings & payouts | `GET` | `/merchant/orders/{orderId}` | Store staff | — | MerchantOrderDetail |
+| 065 | Merchant orders, earnings & payouts | `POST` | `/merchant/orders/{orderId}/accept` | Store staff | estimatedPrepMinutes?, note? | OrderStatusResult |
+| 066 | Merchant orders, earnings & payouts | `POST` | `/merchant/orders/{orderId}/reject` | Store staff | reasonCode, note? | OrderCancellationResult |
+| 067 | Merchant orders, earnings & payouts | `POST` | `/merchant/orders/{orderId}/preparing` | Store staff | expectedReadyAt? | OrderStatusResult |
+| 068 | Merchant orders, earnings & payouts | `POST` | `/merchant/orders/{orderId}/ready` | Store staff | readyItems? | OrderStatusResult + DispatchSummary |
+| 069 | Merchant orders, earnings & payouts | `POST` | `/merchant/orders/{orderId}/handover` | Store staff | driverJobId, handoverCode? | OrderStatusResult |
+| 070 | Merchant orders, earnings & payouts | `GET` | `/merchant/earnings` | Store owner/accounting | from, to, currency? | EarningsReport |
+| 071 | Merchant orders, earnings & payouts | `GET` | `/merchant/payouts` | Store owner/accounting | status?, cursor, limit | Page<Payout> |
+| 072 | Driver, route & proof of delivery | `GET` | `/driver/profile` | Driver | — | DriverProfile |
+| 073 | Driver, route & proof of delivery | `PATCH` | `/driver/profile` | Driver | displayName?, photoAssetId?, locale?, emergencyContact? | DriverProfile |
+| 074 | Driver, route & proof of delivery | `PATCH` | `/driver/availability` | Driver | availability, location? | DriverAvailability |
+| 075 | Driver, route & proof of delivery | `GET` | `/driver/jobs` | Driver | status?, cursor, limit | Page<DriverJob> |
+| 076 | Driver, route & proof of delivery | `POST` | `/driver/jobs/{jobId}/accept` | Driver | acceptedAtClient? | DriverJob |
+| 077 | Driver, route & proof of delivery | `POST` | `/driver/jobs/{jobId}/reject` | Driver | reasonCode | DriverJob |
+| 078 | Driver, route & proof of delivery | `POST` | `/driver/jobs/{jobId}/pickup` | Assigned driver | pickupCode?, itemsVerified? | DriverJob |
+| 079 | Driver, route & proof of delivery | `POST` | `/driver/jobs/{jobId}/start` | Assigned driver | startedAtClient? | DriverJob |
+| 080 | Driver, route & proof of delivery | `POST` | `/driver/jobs/{jobId}/location` | Assigned driver | lat, lng, accuracyM?, heading?, speedMps?, capturedAt | LocationAcknowledgement |
+| 081 | Driver, route & proof of delivery | `POST` | `/driver/jobs/{jobId}/complete` | Assigned driver | otp, proofAssetIds[], note? | DriverJob + OrderStatus |
+| 082 | Driver, route & proof of delivery | `GET` | `/driver/jobs/{jobId}/route` | Assigned driver | destination=STORE or CUSTOMER | RouteSummary |
+| 083 | Driver, route & proof of delivery | `GET` | `/driver/deliveries` | Driver | from?, to?, cursor, limit | Page<DeliveryHistoryItem> |
+| 084 | Driver, route & proof of delivery | `POST` | `/driver/deliveries/{deliveryId}/proof` | Assigned driver | multipart file, type, note? | ProofAsset |
+| 085 | POS, bills, invoices & printing | `GET` | `/pos/catalog` | Authenticated store staff | q?, categoryId?, updatedSince? | CatalogDelta/Page<Product> |
+| 086 | POS, bills, invoices & printing | `POST` | `/pos/quotes` | Store staff | storeId, lines[], customerId?, discountCode? | POSQuote |
+| 087 | POS, bills, invoices & printing | `POST` | `/pos/sales` | Store staff or offline sync | clientSaleId, lines[], customerId?, paymentLines[], occurredAt, deviceId | Sale |
+| 088 | POS, bills, invoices & printing | `GET` | `/pos/sales` | Store staff/accounting | from, to, status?, cursor, limit | Page<SaleSummary> |
+| 089 | POS, bills, invoices & printing | `GET` | `/pos/sales/{saleId}` | Store staff/accounting | — | SaleDetail |
+| 090 | POS, bills, invoices & printing | `POST` | `/pos/sales/{saleId}/payments` | Store staff | method, amountMinor, currency, providerReference? | PaymentRecord |
+| 091 | POS, bills, invoices & printing | `POST` | `/pos/sales/{saleId}/finalize` | Store staff/accounting | finalizationRequestId, taxContextVersion? | Invoice |
+| 092 | POS, bills, invoices & printing | `GET` | `/invoices/{invoiceId}` | Invoice owner or authorized staff | — | InvoiceDocument |
+| 093 | POS, bills, invoices & printing | `POST` | `/invoices/{invoiceId}/print-jobs` | Authorized staff/device | printerId?, format, copies? | PrintJob |
+| 094 | POS, bills, invoices & printing | `GET` | `/print-jobs/{printJobId}` | Authorized staff/device | — | PrintJob |
+| 095 | POS, bills, invoices & printing | `POST` | `/pos/provisional-bills` | Store staff/device | clientBillId, lines[], customerId?, note? | ProvisionalBill |
+| 096 | POS, bills, invoices & printing | `GET` | `/pos/provisional-bills` | Store staff/device | status?, cursor, limit | Page<ProvisionalBill> |
+| 097 | POS, bills, invoices & printing | `POST` | `/pos/provisional-bills/{billId}/resume` | Store staff/device | deviceId | ProvisionalBill |
+| 098 | Inventory, suppliers, purchasing & reports | `GET` | `/inventory/items` | Store staff | q?, lowStock?, cursor, limit | Page<InventoryItem> |
+| 099 | Inventory, suppliers, purchasing & reports | `GET` | `/inventory/movements` | Store staff/auditor | itemId?, from?, to?, cursor, limit | Page<InventoryMovement> |
+| 100 | Inventory, suppliers, purchasing & reports | `POST` | `/inventory/movements` | Authorized stock operator | itemId, locationId, movementType, quantity, sourceType, sourceId, reason | InventoryMovement |
+| 101 | Inventory, suppliers, purchasing & reports | `POST` | `/inventory/adjustments` | Stock manager | itemId, countedQuantity, reason, expectedVersion | InventoryAdjustmentResult |
+| 102 | Inventory, suppliers, purchasing & reports | `GET` | `/suppliers` | Store staff | q?, active?, cursor, limit | Page<Supplier> |
+| 103 | Inventory, suppliers, purchasing & reports | `POST` | `/suppliers` | Store admin | name, contactName?, email?, phone?, address? | Supplier |
+| 104 | Inventory, suppliers, purchasing & reports | `PATCH` | `/suppliers/{supplierId}` | Store admin | name?, contactName?, email?, phone?, address?, status? | Supplier |
+| 105 | Inventory, suppliers, purchasing & reports | `GET` | `/purchase-orders` | Store staff | status?, supplierId?, cursor, limit | Page<PurchaseOrder> |
+| 106 | Inventory, suppliers, purchasing & reports | `POST` | `/purchase-orders` | Store staff | supplierId, storeId, lines[], expectedAt?, notes? | PurchaseOrder |
+| 107 | Inventory, suppliers, purchasing & reports | `POST` | `/purchase-orders/{purchaseOrderId}/submit` | Purchasing permission | expectedVersion | PurchaseOrder |
+| 108 | Inventory, suppliers, purchasing & reports | `POST` | `/purchase-orders/{purchaseOrderId}/receive` | Store staff | receiptId, lines[{lineId, receivedQuantity}], receivedAt | PurchaseReceipt |
+| 109 | Inventory, suppliers, purchasing & reports | `GET` | `/reports/sales` | Owner/accounting | from, to, storeId?, groupBy? | SalesReport |
+| 110 | Inventory, suppliers, purchasing & reports | `GET` | `/reports/profit-loss` | Owner/accounting | from, to, storeId?, basis? | ProfitLossReport |
+| 111 | SaaS & Web Admin | `GET` | `/admin/overview` | Platform admin | from?, to? | AdminOverview |
+| 112 | SaaS & Web Admin | `GET` | `/admin/businesses` | Platform admin | q?, status?, categoryId?, cursor, limit | Page<TenantSummary> |
+| 113 | SaaS & Web Admin | `POST` | `/admin/businesses` | Platform admin | name, legalName?, categoryId, owner, planId, timezone, currency | TenantOnboardingResult |
+| 114 | SaaS & Web Admin | `GET` | `/admin/business-categories` | Platform admin | active? | BusinessCategory[] |
+| 115 | SaaS & Web Admin | `POST` | `/admin/business-categories` | Platform admin | name, slug, description?, status | BusinessCategory |
+| 116 | SaaS & Web Admin | `GET` | `/admin/plans` | Platform admin | status? | SubscriptionPlan[] |
+| 117 | SaaS & Web Admin | `POST` | `/admin/plans` | Platform admin | name, priceMinor, currency, billingPeriod, entitlements[] | SubscriptionPlan |
+| 118 | SaaS & Web Admin | `PATCH` | `/admin/plans/{planId}` | Platform admin | name?, priceMinor?, status?, entitlements? | SubscriptionPlan |
+| 119 | SaaS & Web Admin | `GET` | `/admin/subscriptions` | Platform admin/billing admin | tenantId?, status?, cursor, limit | Page<Subscription> |
+| 120 | SaaS & Web Admin | `POST` | `/admin/subscriptions` | Platform admin/billing admin | tenantId, planId, startsAt, trialEndsAt? | Subscription |
+| 121 | SaaS & Web Admin | `PATCH` | `/admin/subscriptions/{subscriptionId}` | Platform admin/billing admin | status?, planId?, endsAt?, reason | Subscription |
+| 122 | SaaS & Web Admin | `GET` | `/admin/staff` | Platform admin | tenantId?, cursor, limit | Page<PlatformStaff> |
+| 123 | SaaS & Web Admin | `POST` | `/admin/staff` | Platform admin | userId or invitation, platformRoleIds[] | PlatformStaff |
+| 124 | SaaS & Web Admin | `PUT` | `/admin/staff/{memberId}/roles` | Platform admin | roleIds[] | PlatformStaffRoles |
+| 125 | SaaS & Web Admin | `GET` | `/admin/advertising/campaigns` | Platform admin/marketing | status?, cursor, limit | Page<AdCampaign> |
+| 126 | SaaS & Web Admin | `POST` | `/admin/advertising/campaigns` | Platform admin/marketing | name, audience, placement, startsAt, endsAt, budgetMinor? | AdCampaign |
+| 127 | SaaS & Web Admin | `GET` | `/admin/messages` | Platform support | status?, cursor, limit | Page<ContactMessage> |
+| 128 | SaaS & Web Admin | `GET` | `/admin/cms/pages` | Platform content admin | status?, locale? | Page<CmsPage> |
+| 129 | SaaS & Web Admin | `PUT` | `/admin/cms/pages/{pageId}` | Platform content admin | title, slug, locale, content, status, version | CmsPage |
+| 130 | SaaS & Web Admin | `GET` | `/admin/settings` | Platform admin | group? | AdminSettings |
+| 131 | SaaS & Web Admin | `PATCH` | `/admin/settings` | Platform admin | settingsPatch, expectedVersion | AdminSettings |
+| 132 | SaaS & Web Admin | `GET` | `/admin/audit-logs` | Platform auditor | actorId?, action?, from?, to?, cursor, limit | Page<AuditEvent> |
+| 133 | SaaS & Web Admin | `GET` | `/admin/feature-flags` | Platform admin | — | FeatureFlag[] |
+| 134 | SaaS & Web Admin | `PATCH` | `/admin/feature-flags/{flagId}` | Platform admin | enabled, rolloutPercent?, reason | FeatureFlag |
+| 135 | Offline sync | `POST` | `/sync/push` | Authenticated device + tenant membership | deviceId, batchId, events[] | SyncPushResult[]: ACK/CONFLICT/REJECTED |
+| 136 | Offline sync | `GET` | `/sync/pull` | Authenticated device + tenant membership | cursor?, limit, modules[]? | SyncDelta + nextCursor |
+| 137 | Offline sync | `GET` | `/sync/operations/{idempotencyKey}` | Mutation owner / tenant member | — | OperationStatus |
 
 ## 5. JSON contracts
 
@@ -480,42 +480,42 @@ These **36 existing keys** were found in app.html and the standalone Customer/St
 
 | Area | Current key | Current purpose |
 |---|---|---|
-| Workspace | vyavsetu_pos_products | Demo POS product catalogue |
-| Workspace | vyavsetu_market_products | Demo marketplace product catalogue |
-| Workspace | vyavsetu_pos_cart | POS cart |
-| Workspace | vyavsetu_market_cart | Marketplace cart |
-| Workspace | vyavsetu_market_shop | Selected demo marketplace store |
-| Shared orders | vyavsetu_demo_orders | Shared demo order array |
-| Workspace | vyavsetu_current_receipt | Most recent demo receipt |
-| Shared delivery | vyavsetu_delivery_statuses | Order ID to demo delivery status |
-| Workspace | vyavsetu_kitchen_tickets | Demo restaurant/KDS tickets |
-| Workspace | vyavsetu_driver_online | Demo driver availability flag |
-| Shared delivery | vyavsetu_driver_jobs | Demo driver jobs |
-| Workspace | vyavsetu_inventory_items | Demo inventory balances |
-| Workspace | vyavsetu_tenants | Demo tenant records |
-| Workspace | vyavsetu_suppliers | Demo supplier records |
-| Workspace | vyavsetu_purchase_orders | Demo purchase orders |
-| Workspace | vyavsetu_customers | Demo customer CRM records |
-| Workspace | vyavsetu_returns | Demo return/refund requests |
-| Workspace | vyavsetu_staff | Demo staff records |
-| Workspace | vyavsetu_plans | Demo SaaS plans |
-| Workspace | vyavsetu_support_tickets | Demo support tickets |
-| Workspace | vyavsetu_feature_flags | Browser-local feature flags |
-| Workspace | vyavsetu_business_settings | Demo business settings |
-| Workspace | vyavsetu_stock_history | Demo stock movement history |
-| Workspace | vyavsetu_admin_audit | Demo audit entries |
-| Workspace | vyavsetu_subscription_history | Demo subscription changes |
-| Preferences | vyavsetu_theme | Selected theme preference |
-| Customer profile | vyavsetu_customer_name | Demo checkout name |
-| Customer profile | vyavsetu_customer_phone | Demo checkout phone |
-| Customer profile | vyavsetu_customer_address | Demo checkout address |
-| Customer App | vyavsetu-customer-prototype-cart | Standalone Customer App cart snapshot |
-| Customer App | vyavsetu-customer-prototype-orders | Standalone Customer App order-history copy/cache |
-| Store App legacy | vyavsetu-store-demo-orders | Standalone Store App legacy sample queue |
-| Store App legacy | vyavsetu-store-demo-products | Standalone Store App sample product list |
-| Driver App | vyavsetu-driver-demo-task | Standalone Driver selected task |
-| Driver App | vyavsetu-driver-demo-completed | Standalone Driver sample completed trips counter |
-| Driver App | vyavsetu-driver-demo-extra | Standalone Driver sample extra earnings counter |
+| Workspace | `vyavsetu_pos_products` | Demo POS product catalogue |
+| Workspace | `vyavsetu_market_products` | Demo marketplace product catalogue |
+| Workspace | `vyavsetu_pos_cart` | POS cart |
+| Workspace | `vyavsetu_market_cart` | Marketplace cart |
+| Workspace | `vyavsetu_market_shop` | Selected demo marketplace store |
+| Shared orders | `vyavsetu_demo_orders` | Shared demo order array |
+| Workspace | `vyavsetu_current_receipt` | Most recent demo receipt |
+| Shared delivery | `vyavsetu_delivery_statuses` | Order ID to demo delivery status |
+| Workspace | `vyavsetu_kitchen_tickets` | Demo restaurant/KDS tickets |
+| Workspace | `vyavsetu_driver_online` | Demo driver availability flag |
+| Shared delivery | `vyavsetu_driver_jobs` | Demo driver jobs |
+| Workspace | `vyavsetu_inventory_items` | Demo inventory balances |
+| Workspace | `vyavsetu_tenants` | Demo tenant records |
+| Workspace | `vyavsetu_suppliers` | Demo supplier records |
+| Workspace | `vyavsetu_purchase_orders` | Demo purchase orders |
+| Workspace | `vyavsetu_customers` | Demo customer CRM records |
+| Workspace | `vyavsetu_returns` | Demo return/refund requests |
+| Workspace | `vyavsetu_staff` | Demo staff records |
+| Workspace | `vyavsetu_plans` | Demo SaaS plans |
+| Workspace | `vyavsetu_support_tickets` | Demo support tickets |
+| Workspace | `vyavsetu_feature_flags` | Browser-local feature flags |
+| Workspace | `vyavsetu_business_settings` | Demo business settings |
+| Workspace | `vyavsetu_stock_history` | Demo stock movement history |
+| Workspace | `vyavsetu_admin_audit` | Demo audit entries |
+| Workspace | `vyavsetu_subscription_history` | Demo subscription changes |
+| Preferences | `vyavsetu_theme` | Selected theme preference |
+| Customer profile | `vyavsetu_customer_name` | Demo checkout name |
+| Customer profile | `vyavsetu_customer_phone` | Demo checkout phone |
+| Customer profile | `vyavsetu_customer_address` | Demo checkout address |
+| Customer App | `vyavsetu-customer-prototype-cart` | Standalone Customer App cart snapshot |
+| Customer App | `vyavsetu-customer-prototype-orders` | Standalone Customer App order-history copy/cache |
+| Store App legacy | `vyavsetu-store-demo-orders` | Standalone Store App legacy sample queue |
+| Store App legacy | `vyavsetu-store-demo-products` | Standalone Store App sample product list |
+| Driver App | `vyavsetu-driver-demo-task` | Standalone Driver selected task |
+| Driver App | `vyavsetu-driver-demo-completed` | Standalone Driver sample completed trips counter |
+| Driver App | `vyavsetu-driver-demo-extra` | Standalone Driver sample extra earnings counter |
 
 **Production guardrails:** do not store access/refresh tokens, passwords, OTP values, card PAN/CVV or provider secrets in localStorage. Keep localStorage for small web preferences and limited prototype state only. A production browser cache should prefer IndexedDB for structured offline data; Flutter uses Drift/SQLite. PostgreSQL becomes canonical. Logout/account switch clears user-scoped sensitive cache per retention policy.
 
@@ -525,36 +525,36 @@ These are proposed relational tables for offline-capable Flutter clients, not ta
 
 | # | Table | Key columns (design) | Rule/purpose |
 |---:|---|---|---|
-| 1 | local_stores | store_id PK, tenant_id, name, type, status, timezone, currency, address_json, server_version, updated_at | Store/profile cache. |
-| 2 | local_store_hours | store_id + weekday PK, open_at, close_at, closed, server_version | Hours display; server revalidates checkout. |
-| 3 | local_categories | category_id PK, parent_id, name, sort_order, server_version | Category browser cache. |
-| 4 | local_products | product_id PK, name, sku, unit, category_id, image_asset_id, archived, server_version | Fast product-list render. |
-| 5 | local_store_products | store_id + product_id PK, price_minor, currency, availability, stock_snapshot, stock_version, server_version | Assortment cache only; not final price/stock authority. |
-| 6 | local_customer_profile | profile_id PK, display_name, masked_contact_json, updated_at | Minimal profile; avoid unnecessary PII. |
-| 7 | local_addresses | address_id PK, label, recipient, encrypted_address_json, lat?, lng?, is_default, sync_state | Encrypt sensitive fields where supported; clear per retention policy. |
-| 8 | local_cart | cart_id PK, user_id?, store_id, currency, updated_at, sync_state | Cart header; one-store-per-order until multi-store fulfilment is designed. |
-| 9 | local_cart_items | cart_id + product_id PK, quantity, product_snapshot_json, updated_at | Local edits persist immediately. |
-| 10 | local_orders | order_id PK, tenant_id?, store_id, customer_id?, status, payment_state, delivery_state, total_minor, currency, server_version, created_at, updated_at, sync_state | Local view reconciles to server version. |
-| 11 | local_order_items | order_id + line_id PK, product_id, name_snapshot, quantity, unit_price_minor, tax_snapshot_json | Immutable historical line snapshots. |
-| 12 | local_order_events | event_id PK, order_id, state, actor_id, occurred_at, server_version, payload_json | Append-only cached order timeline. |
-| 13 | local_payment_attempts | attempt_id PK, order_id/sale_id, method, amount_minor, currency, state, provider_ref?, idempotency_key, created_at | Never persist card PAN/CVV or provider secrets. |
-| 14 | local_pos_sales | client_sale_id PK, store_id, cashier_id, status, subtotal_minor, tax_minor, total_minor, currency, occurred_at, server_sale_id?, sync_state | Offline POS sale identity. |
-| 15 | local_pos_sale_items | client_sale_id + line_id PK, product_id, sku_snapshot, quantity, unit_price_minor, tax_snapshot_json | Sale-time product/price snapshot. |
-| 16 | local_provisional_bills | client_bill_id PK, store_id, customer_id?, lines_json, note?, revision, updated_at, sync_state | Editable draft, not a statutory invoice. |
-| 17 | local_inventory_balance_cache | store_id + item_id PK, quantity_snapshot, reorder_level?, server_version, pulled_at | Cache only; canonical stock is server ledger. |
-| 18 | local_inventory_movements | client_movement_id PK, store_id, item_id, type, quantity, reason, source_id?, occurred_at, sync_state | Local operation intent until server acknowledgement. |
-| 19 | local_suppliers | supplier_id PK, name, contact_snapshot_json, server_version | Supplier cache. |
-| 20 | local_purchase_orders | purchase_order_id/client_id PK, supplier_id, status, total_minor, currency, server_version, sync_state | Offline drafts; server checks conflicts. |
-| 21 | local_purchase_order_lines | purchase_order_id + line_id PK, product_id, ordered_qty, received_qty, unit_cost_minor, name_snapshot | Line-level receiving state. |
-| 22 | local_kitchen_tickets | ticket_id PK, order_id?, status, items_snapshot_json, due_at?, server_version, sync_state | KDS cache; state conflicts need resolution. |
-| 23 | local_driver_jobs | job_id PK, order_id, driver_id, status, pickup_at?, started_at?, delivered_at?, server_version, sync_state | Only assigned driver can mutate. |
-| 24 | local_driver_location_queue | point_id PK, job_id, lat, lng, accuracy_m?, captured_at, upload_state | Throttle + retention; prune acknowledged points. |
-| 25 | local_notifications | notification_id PK, title, body, read_at?, created_at, server_version | Notification inbox cache. |
-| 26 | local_outbox | event_id PK, tenant_id, device_id, aggregate_type, aggregate_id, operation, payload_json, schema_version, idempotency_key, occurred_at, attempts, next_attempt_at?, state, last_error_code? | Entity write + outbox event commit in one local transaction. |
-| 27 | local_sync_cursors | module_name PK, cursor, last_success_at, server_version | One cursor per module and sync scope. |
-| 28 | local_sync_conflicts | conflict_id PK, event_id, aggregate_type, aggregate_id, server_snapshot_json, local_snapshot_json, resolution_state, created_at | Preserve both snapshots until explicit resolution. |
-| 29 | local_media_upload_queue | media_id PK, local_path, mime_type, size_bytes, checksum, target_type, target_id?, upload_state, attempts | Queue proof/chat/product media upload. |
-| 30 | local_print_jobs | print_job_id PK, sale_id/invoice_id, printer_profile_json, format, copies, state, attempts, last_error?, created_at | Printing state is separate from sale success. |
+| 1 | `local_stores` | store_id PK, tenant_id, name, type, status, timezone, currency, address_json, server_version, updated_at | Store/profile cache. |
+| 2 | `local_store_hours` | store_id + weekday PK, open_at, close_at, closed, server_version | Hours display; server revalidates checkout. |
+| 3 | `local_categories` | category_id PK, parent_id, name, sort_order, server_version | Category browser cache. |
+| 4 | `local_products` | product_id PK, name, sku, unit, category_id, image_asset_id, archived, server_version | Fast product-list render. |
+| 5 | `local_store_products` | store_id + product_id PK, price_minor, currency, availability, stock_snapshot, stock_version, server_version | Assortment cache only; not final price/stock authority. |
+| 6 | `local_customer_profile` | profile_id PK, display_name, masked_contact_json, updated_at | Minimal profile; avoid unnecessary PII. |
+| 7 | `local_addresses` | address_id PK, label, recipient, encrypted_address_json, lat?, lng?, is_default, sync_state | Encrypt sensitive fields where supported; clear per retention policy. |
+| 8 | `local_cart` | cart_id PK, user_id?, store_id, currency, updated_at, sync_state | Cart header; one-store-per-order until multi-store fulfilment is designed. |
+| 9 | `local_cart_items` | cart_id + product_id PK, quantity, product_snapshot_json, updated_at | Local edits persist immediately. |
+| 10 | `local_orders` | order_id PK, tenant_id?, store_id, customer_id?, status, payment_state, delivery_state, total_minor, currency, server_version, created_at, updated_at, sync_state | Local view reconciles to server version. |
+| 11 | `local_order_items` | order_id + line_id PK, product_id, name_snapshot, quantity, unit_price_minor, tax_snapshot_json | Immutable historical line snapshots. |
+| 12 | `local_order_events` | event_id PK, order_id, state, actor_id, occurred_at, server_version, payload_json | Append-only cached order timeline. |
+| 13 | `local_payment_attempts` | attempt_id PK, order_id/sale_id, method, amount_minor, currency, state, provider_ref?, idempotency_key, created_at | Never persist card PAN/CVV or provider secrets. |
+| 14 | `local_pos_sales` | client_sale_id PK, store_id, cashier_id, status, subtotal_minor, tax_minor, total_minor, currency, occurred_at, server_sale_id?, sync_state | Offline POS sale identity. |
+| 15 | `local_pos_sale_items` | client_sale_id + line_id PK, product_id, sku_snapshot, quantity, unit_price_minor, tax_snapshot_json | Sale-time product/price snapshot. |
+| 16 | `local_provisional_bills` | client_bill_id PK, store_id, customer_id?, lines_json, note?, revision, updated_at, sync_state | Editable draft, not a statutory invoice. |
+| 17 | `local_inventory_balance_cache` | store_id + item_id PK, quantity_snapshot, reorder_level?, server_version, pulled_at | Cache only; canonical stock is server ledger. |
+| 18 | `local_inventory_movements` | client_movement_id PK, store_id, item_id, type, quantity, reason, source_id?, occurred_at, sync_state | Local operation intent until server acknowledgement. |
+| 19 | `local_suppliers` | supplier_id PK, name, contact_snapshot_json, server_version | Supplier cache. |
+| 20 | `local_purchase_orders` | purchase_order_id/client_id PK, supplier_id, status, total_minor, currency, server_version, sync_state | Offline drafts; server checks conflicts. |
+| 21 | `local_purchase_order_lines` | purchase_order_id + line_id PK, product_id, ordered_qty, received_qty, unit_cost_minor, name_snapshot | Line-level receiving state. |
+| 22 | `local_kitchen_tickets` | ticket_id PK, order_id?, status, items_snapshot_json, due_at?, server_version, sync_state | KDS cache; state conflicts need resolution. |
+| 23 | `local_driver_jobs` | job_id PK, order_id, driver_id, status, pickup_at?, started_at?, delivered_at?, server_version, sync_state | Only assigned driver can mutate. |
+| 24 | `local_driver_location_queue` | point_id PK, job_id, lat, lng, accuracy_m?, captured_at, upload_state | Throttle + retention; prune acknowledged points. |
+| 25 | `local_notifications` | notification_id PK, title, body, read_at?, created_at, server_version | Notification inbox cache. |
+| 26 | `local_outbox` | event_id PK, tenant_id, device_id, aggregate_type, aggregate_id, operation, payload_json, schema_version, idempotency_key, occurred_at, attempts, next_attempt_at?, state, last_error_code? | Entity write + outbox event commit in one local transaction. |
+| 27 | `local_sync_cursors` | module_name PK, cursor, last_success_at, server_version | One cursor per module and sync scope. |
+| 28 | `local_sync_conflicts` | conflict_id PK, event_id, aggregate_type, aggregate_id, server_snapshot_json, local_snapshot_json, resolution_state, created_at | Preserve both snapshots until explicit resolution. |
+| 29 | `local_media_upload_queue` | media_id PK, local_path, mime_type, size_bytes, checksum, target_type, target_id?, upload_state, attempts | Queue proof/chat/product media upload. |
+| 30 | `local_print_jobs` | print_job_id PK, sale_id/invoice_id, printer_profile_json, format, copies, state, attempts, last_error?, created_at | Printing state is separate from sale success. |
 
 ### Drift rules
 
