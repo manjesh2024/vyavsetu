@@ -314,7 +314,22 @@ const { chromium } = require('playwright');
     await page.waitForFunction(() => document.querySelector('#shell').getBoundingClientRect().width > 1000);
     await app.locator('#localTheme').selectOption('dark');
     await page.waitForFunction(() => document.querySelector('#app')?.contentDocument?.documentElement?.dataset?.theme === 'dark');
+    assert.equal(await app.locator('#sidebarLockup').getAttribute('src'), 'assets/vyavsetu-horizontal-dark.svg',
+      'Dark theme must use the high-contrast logo');
+    const darkLogoOk = await page.locator('#app').evaluate(frame => {
+      const image = frame.contentDocument.getElementById('sidebarLockup');
+      return image.complete && image.naturalWidth > 0;
+    });
+    assert.equal(darkLogoOk, true, 'Dark theme logo should load');
     await app.locator('#localTheme').selectOption('light');
+    await page.waitForFunction(() => document.querySelector('#app')?.contentDocument?.documentElement?.dataset?.theme === 'light');
+    assert.equal(await app.locator('#sidebarLockup').getAttribute('src'), 'assets/vyavsetu-horizontal.svg',
+      'Light theme must use the navy-wordmark logo');
+    const lightLogoOk = await page.locator('#app').evaluate(frame => {
+      const image = frame.contentDocument.getElementById('sidebarLockup');
+      return image.complete && image.naturalWidth > 0;
+    });
+    assert.equal(lightLogoOk, true, 'Light theme logo should load');
     await page.setViewportSize({width:390,height:844});
     const dimensions = await page.evaluate(() => {
       const frame = document.querySelector('#app');
