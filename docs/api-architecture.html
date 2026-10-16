@@ -395,6 +395,7 @@
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -404,10 +405,13 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private final String[] allowedOrigins;
+    private final StompAuthenticationInterceptor authenticationInterceptor;
 
     public WebSocketConfig(
-            @Value(&quot;\${app.realtime.allowed-origins}&quot;) String[] allowedOrigins) {
+            @Value(&quot;\${app.realtime.allowed-origins}&quot;) String[] allowedOrigins,
+            StompAuthenticationInterceptor authenticationInterceptor) {
         this.allowedOrigins = allowedOrigins;
+        this.authenticationInterceptor = authenticationInterceptor;
     }
 
     @Override
@@ -416,10 +420,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(authenticationInterceptor);
+    }
+
+    @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.setApplicationDestinationPrefixes(&quot;/app&quot;);
         registry.setUserDestinationPrefix(&quot;/user&quot;);
-        registry.enableSimpleBroker(&quot;/topic&quot;, &quot;/queue&quot;); // local single-node only
+        registry.enableSimpleBroker(&quot;/topic&quot;, &quot;/queue&quot;); // local/single-node only
     }
 }</code></pre></article>
     <article class="json-card realtime-code"><div class="json-head"><h3>CONNECT authentication + SUBSCRIBE authorization core</h3><button class="copy" data-copy-target="ws-auth">Copy JAVA</button></div><p>Illustrative interceptor body; inject the actual JWT authenticator and destination authorizer, then register via configureClientInboundChannel.</p><pre><code id="ws-auth">@Override
@@ -473,7 +482,7 @@ public class RealtimePublisher {
 }</code></pre></article>
   </div>
   <h3>Frontend implementation — Flutter</h3>
-  <p class="flow-desc">Use a maintained STOMP client and keep one connection per authenticated app session, not per screen/widget.</p>
+  <p class="flow-desc">Use a maintained STOMP client and keep one connection per authenticated app session, not per screen/widget. Store the connection in a session-scoped service/repository and expose parsed events to BLoC/Cubit; don't create a socket inside build() or each page.</p>
   <div class="module-grid">
     <div class="module-card"><b>Customer subscriptions</b><p><code>/user/queue/order-updates</code><br><code>/user/queue/notifications</code></p></div>
     <div class="module-card"><b>Store subscriptions</b><p><code>/user/queue/store-orders</code><br><code>/user/queue/notifications</code></p></div>
@@ -542,7 +551,51 @@ class VyavsetuRealtimeClient {
     <li>On disconnect/resume/sequence gap, reconnect, resubscribe and reconcile with REST or <code>/sync/pull</code>.</li>
     <li>Disconnect and unsubscribe on logout/account switch; restrict order tracking and location visibility to valid participants.</li>
   </ol>
-  <h3>End-to-end run flow</h3>
+  <h3>Runtime configuration files</h3>
+<p class="flow-desc">Use these in the future backend project, for example <code>backend/src/main/resources/application-local.yml</code> and <code>backend/docker-compose.dev.yml</code>. They do not need to be added to the current HTML-only demo repository.</p>
+<div class="json-grid">
+<article class="json-card realtime-code"><div class="json-head"><h3>application-local.yml</h3><button class="copy" data-copy-target="ws-app-yaml">Copy YAML</button></div><p>Environment variable defaults are for local development only; use secrets management outside a developer laptop. Flyway creates schema and JPA validates it.</p><pre><code id="ws-app-yaml">server:
+  port: 8080
+spring:
+  datasource:
+    url: \${DB_URL:jdbc:postgresql://localhost:5432/vyavsetu}
+    username: \${DB_USERNAME:vyavsetu}
+    password: \${DB_PASSWORD:change-me-local}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  jackson:
+    time-zone: UTC
+app:
+  realtime:
+    allowed-origins: \${APP_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,http://localhost:8081}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info</code></pre></article>
+<article class="json-card realtime-code"><div class="json-head"><h3>docker-compose.dev.yml</h3><button class="copy" data-copy-target="ws-compose">Copy YAML</button></div><p>Start PostgreSQL with a named volume. This file is a reference to create in the backend project, not an existing repository file.</p><pre><code id="ws-compose">services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: vyavsetu
+      POSTGRES_USER: vyavsetu
+      POSTGRES_PASSWORD: change-me-local
+    ports:
+      - &quot;5432:5432&quot;
+    volumes:
+      - vyavsetu_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [&quot;CMD-SHELL&quot;, &quot;pg_isready -U vyavsetu -d vyavsetu&quot;]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+volumes:
+  vyavsetu_pgdata:</code></pre></article>
+</div>
+<h3>End-to-end run flow</h3>
   <article class="json-card realtime-code"><div class="json-head"><h3>Add the client package</h3><button class="copy" data-copy-target="ws-flutter-dependency">Copy BASH</button></div><p>Pin the resolved version in pubspec.lock and verify callback API against that version.</p><pre><code id="ws-flutter-dependency">flutter pub add stomp_dart_client</code></pre></article>
   <article class="json-card realtime-code"><div class="json-head"><h3>Local environment values</h3><button class="copy" data-copy-target="ws-local-env">Copy ENV</button></div><p>These are examples for local development only. Use HTTPS/WSS and actual domains in production.</p><pre><code id="ws-local-env">API_BASE_URL=http://localhost:8080/api/v1\nWS_URL=ws://localhost:8080/ws\nAPP_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:8081</code></pre></article>
   <article class="json-card realtime-code"><div class="json-head"><h3>Start local PostgreSQL</h3><button class="copy" data-copy-target="ws-docker">Copy BASH</button></div><p>Create the PostgreSQL compose file from the Markdown runbook in the backend folder; don't change the current demo to do this.</p><pre><code id="ws-docker">docker compose -f docker-compose.dev.yml up -d postgres\ndocker compose -f docker-compose.dev.yml ps</code></pre></article>
