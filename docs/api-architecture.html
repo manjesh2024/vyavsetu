@@ -23,7 +23,7 @@
 <section class="doc-hero"><div class="eyebrow">Production blueprint · contract first</div><h1>Vyavsetu API architecture & Java design</h1><p>One source of truth across Customer, Store, Driver, POS, Business Admin and Super Admin—with JSON contracts, offline tables, tenant isolation and Java implementation boundaries.</p><div class="hero-pills"><span class="pill">REST · /api/v1</span><span class="pill">137 proposed operations</span><span class="pill">Spring Boot modular monolith</span><span class="pill">PostgreSQL</span><span class="pill">Drift / SQLite</span></div><div class="source-links"><a href="API_ARCHITECTURE.md" target="_blank" rel="noopener">Open Markdown source ↗</a><a href="../apps/" target="_blank" rel="noopener">Open mobile app preview ↗</a></div></section>
 <div class="warning-note"><strong>Read first:</strong> this is target architecture, not a claim these endpoints/tables already exist. No existing app/UI behaviour is changed. HTML prototype uses browser localStorage; production Flutter clients should use Drift/SQLite for structured offline data.</div>
 <div class="kpi-grid"><div class="kpi"><b>137</b><span>Proposed business REST operations</span></div><div class="kpi"><b>36</b><span>Current localStorage keys inventoried</span></div><div class="kpi"><b>30</b><span>Proposed local tables</span></div><div class="kpi"><b>12</b><span>API module groups</span></div></div>
-<div class="section-nav"><a href="#architecture">Architecture</a><a href="#endpoint-catalogue">Endpoint catalogue</a><a href="#json-contracts">JSON contracts</a><a href="#browser-storage">Current LocalStorage</a><a href="#local-db">Local tables</a><a href="#server-db">PostgreSQL</a><a href="#java-blueprint">Java packages</a><a href="#safety">Security & phases</a></div>
+<div class="section-nav"><a href="#architecture">Architecture</a><a href="#endpoint-catalogue">Endpoint catalogue</a><a href="#json-contracts">JSON contracts</a><a href="#realtime">WebSocket + frontend</a><a href="#browser-storage">Current LocalStorage</a><a href="#local-db">Local tables</a><a href="#server-db">PostgreSQL</a><a href="#java-blueprint">Java packages</a><a href="#safety">Security & phases</a></div>
 <section class="page-section" id="architecture"><div class="section-heading"><div><h2>01 · Architecture at a glance</h2><p>Monolith first, with explicit module boundaries and one server-authoritative business record.</p></div></div><div class="diagram-board"><div class="architecture-stack">
 <div class="layer"><div class="layer-label">Client surfaces</div><div class="node-grid"><div class="node">Customer App<small>Flutter mobile</small></div><div class="node">Store App<small>Flutter mobile/web</small></div><div class="node">Driver App<small>Flutter mobile</small></div><div class="node">POS / Admin<small>Flutter adaptive UI</small></div></div></div><div class="diagram-arrow">↓ HTTPS JSON · /api/v1 · authenticated + tenant scoped</div>
 <div class="layer"><div class="layer-label">Java API boundary</div><div class="node-grid"><div class="node primary">Spring Security<small>Actor + tenant + RBAC</small></div><div class="node">DTO validation</div><div class="node">Idempotency</div><div class="node">Audit + request IDs</div></div></div><div class="diagram-arrow">↓ module application services</div>
@@ -334,7 +334,243 @@
     }
   ]
 }</code></pre></article></div></section>
-<section class="page-section" id="browser-storage"><div class="section-heading"><div><h2>04 · Current browser localStorage inventory</h2><p>36 existing keys; this task only documents them.</p></div></div><div class="warning-note"><strong>Important:</strong> localStorage is key/value storage, not a relational table. Never store password, OTP, access/refresh tokens or card PAN/CVV here. PostgreSQL is server source of truth; Drift/SQLite is structured local data for Flutter.</div><div class="doc-table-wrap"><table class="data-table"><thead><tr><th>Area</th><th>Current key</th><th>Purpose</th></tr></thead><tbody><tr><td>Workspace</td><td><code>vyavsetu_pos_products</code></td><td>Demo POS product catalogue</td></tr>
+
+<section class="page-section" id="realtime">
+  <div class="section-heading"><div><h2>04 · Realtime architecture — WebSocket + STOMP</h2><p>Backend and frontend contract for live order updates, store dispatch, driver jobs, chat and notifications.</p></div></div>
+  <div class="warning-note"><strong>Production proposal, not currently connected:</strong> the present HTML previews still use browser localStorage. WebSocket/STOMP is for the planned Flutter Customer, Store and Driver apps with the Spring Boot backend. REST remains the command/source-of-truth API; realtime messages notify clients about committed changes.</div>
+  <div class="kpi-grid">
+    <div class="kpi"><b>REST</b><span>Create order, accept/reject, status transitions, payment and reconciliation</span></div>
+    <div class="kpi"><b>STOMP</b><span>Server push, user queues and authorized tracking subscriptions</span></div>
+    <div class="kpi"><b>Outbox</b><span>Publish events only after the database transaction commits</span></div>
+    <div class="kpi"><b>Reconcile</b><span>After reconnect, refresh canonical state through REST/sync</span></div>
+  </div>
+  <div class="diagram-board"><div class="architecture-stack">
+    <div class="layer"><div class="layer-label">Frontend apps — Flutter</div><div class="node-grid"><div class="node">Customer<small>Order updates + tracking</small></div><div class="node">Store<small>New order queue</small></div><div class="node">Driver<small>Job assignments + route status</small></div><div class="node">Chat<small>Participant-only messages</small></div></div></div>
+    <div class="diagram-arrow">↓ WSS/WS + STOMP CONNECT bearer · authorized SUBSCRIBE</div>
+    <div class="layer"><div class="layer-label">Spring Boot realtime edge</div><div class="node-grid"><div class="node primary">JWT authentication</div><div class="node">Subscription authorizer</div><div class="node">STOMP broker</div><div class="node">Rate limits + heartbeats</div></div></div>
+    <div class="diagram-arrow">↑ committed domain events · transactional outbox</div>
+    <div class="layer"><div class="layer-label">Domain + persistence</div><div class="node-grid"><div class="node">Order / payment state machine</div><div class="node">Delivery dispatch</div><div class="node green">PostgreSQL</div><div class="node">Outbox publisher</div></div></div>
+  </div></div>
+  <h3>Connection setup</h3>
+  <div class="doc-table-wrap"><table class="data-table"><thead><tr><th>Setting</th><th>Local development</th><th>Production</th></tr></thead><tbody>
+  <tr><td>REST base</td><td><code>http://localhost:8080/api/v1</code></td><td><code>https://api.your-domain/api/v1</code></td></tr>
+  <tr><td>WebSocket URL</td><td><code>ws://localhost:8080/ws</code></td><td><code>wss://api.your-domain/ws</code></td></tr>
+  <tr><td>STOMP prefixes</td><td><code>/app</code>, <code>/topic</code>, <code>/queue</code>, <code>/user</code></td><td>Same prefixes, authenticated and authorized</td></tr>
+  <tr><td>Protocol</td><td>STOMP 1.2 over WebSocket</td><td>STOMP 1.2 over WSS/TLS</td></tr>
+  </tbody></table></div>
+  <h3>Destination / event matrix</h3>
+  <div class="doc-table-wrap"><table class="data-table"><thead><tr><th>Destination</th><th>Consumer</th><th>Event examples</th><th>Server authorization</th></tr></thead><tbody><tr><td><code>/user/queue/order-updates</code></td><td>Customer</td><td>Order created/status, payment status</td><td>Authenticated user is an order participant.</td></tr><tr><td><code>/user/queue/store-orders</code></td><td>Store</td><td>New order, cancellation</td><td>User has permission for the matching store/tenant.</td></tr><tr><td><code>/user/queue/driver-jobs</code></td><td>Driver</td><td>Job assigned/cancelled</td><td>Approved driver is eligible for that assignment.</td></tr><tr><td><code>/topic/orders/{orderId}/tracking</code></td><td>Customer, assigned driver</td><td>Status and location update</td><td>Authorize every subscription by order participant/driver assignment.</td></tr><tr><td><code>/topic/conversations/{conversationId}</code></td><td>Chat participants</td><td>Message created/read</td><td>Conversation membership and block policy.</td></tr><tr><td><code>/user/queue/notifications</code></td><td>Signed-in user</td><td>Notification created</td><td>User-specific destination, never public broadcast.</td></tr><tr><td><code>/user/queue/sync-alerts</code></td><td>Signed-in user/device</td><td>Sync conflict/rejection</td><td>Tenant and device scope checked server-side.</td></tr></tbody></table></div>
+  <h3>Server event JSON</h3>
+  <div class="json-grid"><article class="json-card realtime-code"><div class="json-head"><h3>ORDER.STATUS_CHANGED envelope</h3><button class="copy" data-copy-target="realtime-event-json">Copy JSON</button></div><p>Published after a successful server-side status change. Add event IDs and aggregate versions for deduplication/order.</p><pre><code id="realtime-event-json">{
+  &quot;eventId&quot;: &quot;evt_01J9ORDER&quot;,
+  &quot;eventType&quot;: &quot;ORDER.STATUS_CHANGED&quot;,
+  &quot;schemaVersion&quot;: 1,
+  &quot;occurredAt&quot;: &quot;2026-10-16T09:15:20Z&quot;,
+  &quot;aggregate&quot;: {
+    &quot;type&quot;: &quot;ORDER&quot;,
+    &quot;id&quot;: &quot;ord_01J9ABC&quot;,
+    &quot;version&quot;: 4
+  },
+  &quot;data&quot;: {
+    &quot;status&quot;: &quot;READY_FOR_PICKUP&quot;,
+    &quot;storeId&quot;: &quot;str_01J9STORE&quot;
+  },
+  &quot;requestId&quot;: &quot;req_01J9&quot;
+}</code></pre></article></div>
+  <h3>Backend implementation</h3>
+  <div class="module-grid">
+    <div class="module-card"><b>1. Add dependency</b><p>Add spring-boot-starter-websocket using the version managed by the Spring Boot BOM. Keep Web, Security, Validation, JPA, PostgreSQL, Flyway and Actuator dependencies.</p></div>
+    <div class="module-card"><b>2. Configure broker</b><p>Register /ws; set /app for inbound app messages and /user for per-user queues. The simple broker is only for local/single-node use.</p></div>
+    <div class="module-card"><b>3. Authenticate CONNECT</b><p>Validate the STOMP Authorization bearer header and set the authenticated Principal. Do not place JWT tokens in URL query strings.</p></div>
+    <div class="module-card"><b>4. Authorize SUBSCRIBE</b><p>Check tenant, store, order ownership and participant membership on every subscription. Knowing a UUID is not authorization.</p></div>
+    <div class="module-card"><b>5. Publish after commit</b><p>Write domain row and outbox event in the same PostgreSQL transaction, then publish the minimal event from an outbox worker.</p></div>
+    <div class="module-card"><b>6. Scale correctly</b><p>In-memory broker messages do not fan out across replicas. Add a broker relay/shared event transport for multi-instance production deployment.</p></div>
+  </div>
+  <div class="json-grid">
+    <article class="json-card realtime-code"><div class="json-head"><h3>Maven dependency</h3><button class="copy" data-copy-target="ws-maven">Copy XML</button></div><p>Use Spring Boot dependency management; do not pin arbitrary Spring versions.</p><pre><code id="ws-maven">&lt;dependency&gt;
+  &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+  &lt;artifactId&gt;spring-boot-starter-websocket&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre></article>
+    <article class="json-card realtime-code"><div class="json-head"><h3>Spring STOMP endpoint + broker config</h3><button class="copy" data-copy-target="ws-config">Copy JAVA</button></div><p>Wire a strict allowed-origin list from application config.</p><pre><code id="ws-config">package com.vyavsetu.common.realtime;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+
+@Configuration
+@EnableWebSocketMessageBroker
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+    private final String[] allowedOrigins;
+
+    public WebSocketConfig(
+            @Value(&quot;\${app.realtime.allowed-origins}&quot;) String[] allowedOrigins) {
+        this.allowedOrigins = allowedOrigins;
+    }
+
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint(&quot;/ws&quot;).setAllowedOriginPatterns(allowedOrigins);
+    }
+
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry registry) {
+        registry.setApplicationDestinationPrefixes(&quot;/app&quot;);
+        registry.setUserDestinationPrefix(&quot;/user&quot;);
+        registry.enableSimpleBroker(&quot;/topic&quot;, &quot;/queue&quot;); // local single-node only
+    }
+}</code></pre></article>
+    <article class="json-card realtime-code"><div class="json-head"><h3>CONNECT authentication + SUBSCRIBE authorization core</h3><button class="copy" data-copy-target="ws-auth">Copy JAVA</button></div><p>Illustrative interceptor body; inject the actual JWT authenticator and destination authorizer, then register via configureClientInboundChannel.</p><pre><code id="ws-auth">@Override
+public Message&lt;?&gt; preSend(Message&lt;?&gt; message, MessageChannel channel) {
+    StompHeaderAccessor accessor =
+        MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+    if (accessor == null) return message;
+
+    if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+        String auth = accessor.getFirstNativeHeader(&quot;Authorization&quot;);
+        if (auth == null || !auth.startsWith(&quot;Bearer &quot;)) {
+            throw new IllegalArgumentException(&quot;Missing bearer token&quot;);
+        }
+        Principal principal = jwtAuthenticator.authenticate(auth.substring(7));
+        accessor.setUser(principal);
+    }
+
+    if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+        Principal principal = accessor.getUser();
+        String destination = accessor.getDestination();
+        if (principal == null ||
+            !subscriptionAuthorizer.maySubscribe(principal, destination)) {
+            throw new IllegalArgumentException(&quot;Subscription not authorized&quot;);
+        }
+    }
+    return message;
+}</code></pre></article>
+    <article class="json-card realtime-code"><div class="json-head"><h3>Publish to customer/store/driver destinations</h3><button class="copy" data-copy-target="ws-publisher">Copy JAVA</button></div><p>Typed event envelope and trusted recipient IDs are required in the production implementation.</p><pre><code id="ws-publisher">@Component
+public class RealtimePublisher {
+    private final SimpMessagingTemplate messaging;
+
+    public RealtimePublisher(SimpMessagingTemplate messaging) {
+        this.messaging = messaging;
+    }
+
+    public void customerOrderUpdate(String userId, RealtimeEvent&lt;?&gt; event) {
+        messaging.convertAndSendToUser(userId, &quot;/queue/order-updates&quot;, event);
+    }
+
+    public void storeOrderUpdate(String staffUserId, RealtimeEvent&lt;?&gt; event) {
+        messaging.convertAndSendToUser(staffUserId, &quot;/queue/store-orders&quot;, event);
+    }
+
+    public void driverJobAssigned(String driverUserId, RealtimeEvent&lt;?&gt; event) {
+        messaging.convertAndSendToUser(driverUserId, &quot;/queue/driver-jobs&quot;, event);
+    }
+
+    public void orderTracking(String orderId, RealtimeEvent&lt;?&gt; event) {
+        messaging.convertAndSend(&quot;/topic/orders/&quot; + orderId + &quot;/tracking&quot;, event);
+    }
+}</code></pre></article>
+  </div>
+  <h3>Frontend implementation — Flutter</h3>
+  <p class="flow-desc">Use a maintained STOMP client and keep one connection per authenticated app session, not per screen/widget.</p>
+  <div class="module-grid">
+    <div class="module-card"><b>Customer subscriptions</b><p><code>/user/queue/order-updates</code><br><code>/user/queue/notifications</code></p></div>
+    <div class="module-card"><b>Store subscriptions</b><p><code>/user/queue/store-orders</code><br><code>/user/queue/notifications</code></p></div>
+    <div class="module-card"><b>Driver subscriptions</b><p><code>/user/queue/driver-jobs</code><br><code>/user/queue/notifications</code></p></div>
+  </div>
+  <article class="json-card realtime-code"><div class="json-head"><h3>Shared Flutter STOMP client skeleton</h3><button class="copy" data-copy-target="ws-flutter">Copy DART</button></div><p>Adapt package callback types to the pinned stomp_dart_client version. Forward events to a repository/BLoC; update Drift and reconcile critical state with REST.</p><pre><code id="ws-flutter">import 'dart:convert';
+import 'package:stomp_dart_client/stomp_dart_client.dart';
+
+class VyavsetuRealtimeClient {
+  StompClient? _client;
+  final void Function(Map&lt;String, dynamic&gt;) onEvent;
+  final void Function(Object error)? onError;
+
+  VyavsetuRealtimeClient({required this.onEvent, this.onError});
+
+  void connect({
+    required String wsUrl,
+    required String accessToken,
+    required List&lt;String&gt; destinations,
+  }) {
+    disconnect();
+    _client = StompClient(
+      config: StompConfig(
+        url: wsUrl,
+        stompConnectHeaders: {'Authorization': 'Bearer $accessToken'},
+        heartbeatIncoming: const Duration(seconds: 20),
+        heartbeatOutgoing: const Duration(seconds: 20),
+        reconnectDelay: const Duration(seconds: 5),
+        onConnect: (_) {
+          for (final destination in destinations) {
+            _client?.subscribe(
+              destination: destination,
+              callback: (frame) {
+                if (frame.body == null) return;
+                try {
+                  final value = jsonDecode(frame.body!);
+                  if (value is Map&lt;String, dynamic&gt;) onEvent(value);
+                } catch (error) {
+                  onError?.call(error);
+                }
+              },
+            );
+          }
+        },
+        onWebSocketError: (dynamic error) =&gt;
+            onError?.call(Exception('$error')),
+        onStompError: (frame) =&gt;
+            onError?.call(Exception(frame.body ?? 'STOMP error')),
+      ),
+    );
+    _client!.activate();
+  }
+
+  void disconnect() {
+    _client?.deactivate();
+    _client = null;
+  }
+}</code></pre></article>
+  <h3>Frontend event handling rules</h3>
+  <ol>
+    <li>Sign in using REST and store credentials in platform-appropriate secure storage.</li>
+    <li>Load orders/jobs from REST and render the local Drift cache first.</li>
+    <li>Connect and subscribe with the current access token. On token refresh, recreate the connection with the new token.</li>
+    <li>Validate event type/schema/version, deduplicate by <code>eventId</code>, and refresh the canonical entity through repository/REST before applying a critical transition.</li>
+    <li>Update the local database; then BLoC/Cubit emits the new UI state. WebSocket frame arrival is not proof that a payment/order command succeeded.</li>
+    <li>On disconnect/resume/sequence gap, reconnect, resubscribe and reconcile with REST or <code>/sync/pull</code>.</li>
+    <li>Disconnect and unsubscribe on logout/account switch; restrict order tracking and location visibility to valid participants.</li>
+  </ol>
+  <h3>End-to-end run flow</h3>
+  <article class="json-card realtime-code"><div class="json-head"><h3>Add the client package</h3><button class="copy" data-copy-target="ws-flutter-dependency">Copy BASH</button></div><p>Pin the resolved version in pubspec.lock and verify callback API against that version.</p><pre><code id="ws-flutter-dependency">flutter pub add stomp_dart_client</code></pre></article>
+  <article class="json-card realtime-code"><div class="json-head"><h3>Local environment values</h3><button class="copy" data-copy-target="ws-local-env">Copy ENV</button></div><p>These are examples for local development only. Use HTTPS/WSS and actual domains in production.</p><pre><code id="ws-local-env">API_BASE_URL=http://localhost:8080/api/v1\nWS_URL=ws://localhost:8080/ws\nAPP_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:8081</code></pre></article>
+  <article class="json-card realtime-code"><div class="json-head"><h3>Start local PostgreSQL</h3><button class="copy" data-copy-target="ws-docker">Copy BASH</button></div><p>Create the PostgreSQL compose file from the Markdown runbook in the backend folder; don't change the current demo to do this.</p><pre><code id="ws-docker">docker compose -f docker-compose.dev.yml up -d postgres\ndocker compose -f docker-compose.dev.yml ps</code></pre></article>
+  <article class="json-card realtime-code"><div class="json-head"><h3>Run the Spring Boot backend</h3><button class="copy" data-copy-target="ws-backend-run">Copy BASH</button></div><p>Commands apply after the backend project is scaffolded and its local profile/Flyway migrations exist. Never use the sample password outside local development.</p><pre><code id="ws-backend-run">export DB_URL='jdbc:postgresql://localhost:5432/vyavsetu'\nexport DB_USERNAME='vyavsetu'\nexport DB_PASSWORD='change-me-local'\nexport APP_ALLOWED_ORIGINS='http://localhost:3000,http://localhost:5173,http://localhost:8081'\n./mvnw spring-boot:run -Dspring-boot.run.profiles=local\ncurl -fsS http://localhost:8080/actuator/health</code></pre></article>
+  <article class="json-card realtime-code"><div class="json-head"><h3>Run a Flutter app in Chrome</h3><button class="copy" data-copy-target="ws-flutter-run">Copy BASH</button></div><p>Run this in each future Customer, Store or Driver Flutter project directory. Those Flutter source projects are not currently in this HTML prototype repo.</p><pre><code id="ws-flutter-run">flutter pub get\nflutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8080/api/v1 --dart-define=WS_URL=ws://localhost:8080/ws</code></pre></article>
+  <h3>End-to-end acceptance test</h3>
+  <ol>
+    <li>Customer creates an order through REST. Confirm its canonical status is <code>PENDING_STORE_ACCEPTANCE</code>.</li>
+    <li>Store user receives the order on the authenticated user queue. Store accepts and marks it Ready through REST.</li>
+    <li>After database commit, outbox publishes a status event; the Customer app refreshes the order detail and timeline.</li>
+    <li>Dispatcher assigns a driver; the authenticated Driver app receives a job event and processes pickup/start/complete via REST.</li>
+    <li>Only authorized order participants receive tracking/status updates. Driver completion requires a server-verified, expiring OTP.</li>
+    <li>Disable/re-enable network. Verify reconnection/resubscribe, REST reconciliation, no duplicate orders/payments and no stale status overwrites.</li>
+    <li>Attempt to subscribe as another tenant/user to an order topic; server must deny it and log a security event.</li>
+  </ol>
+  <h3>Troubleshooting</h3>
+  <div class="doc-table-wrap"><table class="data-table"><thead><tr><th>Symptom</th><th>Check</th></tr></thead><tbody>
+  <tr><td>Socket fails before STOMP CONNECT</td><td><code>/ws</code> endpoint, proxy upgrade headers, Origin allowlist, TLS/mixed content, port and firewall.</td></tr>
+  <tr><td>STOMP unauthenticated</td><td>CONNECT frame bearer token and JWT interceptor; ensure token is current.</td></tr>
+  <tr><td>SUBSCRIBE denied</td><td>Destination spelling, principal identity and object-level subscription authorizer.</td></tr>
+  <tr><td>REST succeeds but event missing</td><td>Outbox event persisted, publisher/relay health, principal-to-user ID mapping and event schema.</td></tr>
+  <tr><td>Duplicate/stale card after reconnect</td><td>Deduplicate by eventId, compare aggregate version, then reconcile canonical REST/sync state.</td></tr>
+  <tr><td>Works on one server only</td><td>Simple broker is in-memory; use broker relay/shared event transport with multiple replicas.</td></tr>
+  <tr><td>HTTPS page refuses WebSocket</td><td>Production must use WSS with a valid certificate; don't mix HTTPS with insecure WS.</td></tr>
+  </tbody></table></div>
+  <div class="warning-note"><strong>Important boundary:</strong> this is the proposed backend + frontend runbook. It documents commands to use after Spring Boot, PostgreSQL and Flutter project scaffolding exists; those production services/clients are not created by the current HTML demo.</div>
+</section>
+<section class="page-section" id="browser-storage"><div class="section-heading"><div><h2>05 · Current browser localStorage inventory</h2><p>36 existing keys; this task only documents them.</p></div></div><div class="warning-note"><strong>Important:</strong> localStorage is key/value storage, not a relational table. Never store password, OTP, access/refresh tokens or card PAN/CVV here. PostgreSQL is server source of truth; Drift/SQLite is structured local data for Flutter.</div><div class="doc-table-wrap"><table class="data-table"><thead><tr><th>Area</th><th>Current key</th><th>Purpose</th></tr></thead><tbody><tr><td>Workspace</td><td><code>vyavsetu_pos_products</code></td><td>Demo POS product catalogue</td></tr>
 <tr><td>Workspace</td><td><code>vyavsetu_market_products</code></td><td>Demo marketplace product catalogue</td></tr>
 <tr><td>Workspace</td><td><code>vyavsetu_pos_cart</code></td><td>POS cart</td></tr>
 <tr><td>Workspace</td><td><code>vyavsetu_market_cart</code></td><td>Marketplace cart</td></tr>
@@ -370,7 +606,7 @@
 <tr><td>Driver App</td><td><code>vyavsetu-driver-demo-task</code></td><td>Standalone Driver selected task</td></tr>
 <tr><td>Driver App</td><td><code>vyavsetu-driver-demo-completed</code></td><td>Standalone Driver sample completed trips counter</td></tr>
 <tr><td>Driver App</td><td><code>vyavsetu-driver-demo-extra</code></td><td>Standalone Driver sample extra earnings counter</td></tr></tbody></table></div></section>
-<section class="page-section" id="local-db"><div class="section-heading"><div><h2>05 · Proposed Drift / SQLite tables</h2><p>30 proposed local tables; each app should use only the subset it needs.</p></div></div><div class="doc-table-wrap"><table class="data-table"><thead><tr><th>#</th><th>Table</th><th>Key fields</th><th>Rule/purpose</th></tr></thead><tbody><tr><td>1</td><td><code>local_stores</code></td><td>store_id PK, tenant_id, name, type, status, timezone, currency, address_json, server_version, updated_at</td><td>Store/profile cache.</td></tr>
+<section class="page-section" id="local-db"><div class="section-heading"><div><h2>06 · Proposed Drift / SQLite tables</h2><p>30 proposed local tables; each app should use only the subset it needs.</p></div></div><div class="doc-table-wrap"><table class="data-table"><thead><tr><th>#</th><th>Table</th><th>Key fields</th><th>Rule/purpose</th></tr></thead><tbody><tr><td>1</td><td><code>local_stores</code></td><td>store_id PK, tenant_id, name, type, status, timezone, currency, address_json, server_version, updated_at</td><td>Store/profile cache.</td></tr>
 <tr><td>2</td><td><code>local_store_hours</code></td><td>store_id + weekday PK, open_at, close_at, closed, server_version</td><td>Hours display; server revalidates checkout.</td></tr>
 <tr><td>3</td><td><code>local_categories</code></td><td>category_id PK, parent_id, name, sort_order, server_version</td><td>Category browser cache.</td></tr>
 <tr><td>4</td><td><code>local_products</code></td><td>product_id PK, name, sku, unit, category_id, image_asset_id, archived, server_version</td><td>Fast product-list render.</td></tr>
@@ -400,7 +636,7 @@
 <tr><td>28</td><td><code>local_sync_conflicts</code></td><td>conflict_id PK, event_id, aggregate_type, aggregate_id, server_snapshot_json, local_snapshot_json, resolution_state, created_at</td><td>Preserve both snapshots until explicit resolution.</td></tr>
 <tr><td>29</td><td><code>local_media_upload_queue</code></td><td>media_id PK, local_path, mime_type, size_bytes, checksum, target_type, target_id?, upload_state, attempts</td><td>Queue proof/chat/product media upload.</td></tr>
 <tr><td>30</td><td><code>local_print_jobs</code></td><td>print_job_id PK, sale_id/invoice_id, printer_profile_json, format, copies, state, attempts, last_error?, created_at</td><td>Printing state is separate from sale success.</td></tr></tbody></table></div></section>
-<section class="page-section" id="server-db"><div class="section-heading"><div><h2>06 · Proposed PostgreSQL model</h2><p>Server-owned data, tenant boundaries and constraints.</p></div></div><div class="doc-table-wrap"><table class="data-table"><thead><tr><th>Module</th><th>Tables / aggregates</th><th>Critical constraint</th></tr></thead><tbody><tr><td><strong>Identity</strong></td><td>users, auth_identities, refresh_sessions, otp_challenges</td><td>Normalized identifiers unique; tokens stored hashed; OTPs expire.</td></tr>
+<section class="page-section" id="server-db"><div class="section-heading"><div><h2>07 · Proposed PostgreSQL model</h2><p>Server-owned data, tenant boundaries and constraints.</p></div></div><div class="doc-table-wrap"><table class="data-table"><thead><tr><th>Module</th><th>Tables / aggregates</th><th>Critical constraint</th></tr></thead><tbody><tr><td><strong>Identity</strong></td><td>users, auth_identities, refresh_sessions, otp_challenges</td><td>Normalized identifiers unique; tokens stored hashed; OTPs expire.</td></tr>
 <tr><td><strong>Tenant/RBAC</strong></td><td>tenants, tenant_memberships, roles, permissions, role_permissions, membership_roles</td><td>Unique tenant+user membership; platform roles separate from tenant roles.</td></tr>
 <tr><td><strong>Stores</strong></td><td>stores, store_hours</td><td>Each store belongs to a tenant; hours use store timezone.</td></tr>
 <tr><td><strong>Customer/driver</strong></td><td>customer_profiles, customer_addresses, driver_profiles, driver_availability, device_registrations</td><td>PII and driver location restricted and retained by policy.</td></tr>
@@ -416,7 +652,7 @@
 <tr><td><strong>SaaS billing</strong></td><td>plans, plan_entitlements, subscriptions, subscription_events, store_payouts</td><td>Snapshot plan/price at subscription start; audit lifecycle.</td></tr>
 <tr><td><strong>Website/admin</strong></td><td>ad_campaigns, contact_messages, cms_pages, system_settings, feature_flags</td><td>Sanitize CMS HTML; settings responses never contain secrets.</td></tr>
 <tr><td><strong>Reliability</strong></td><td>notifications, audit_logs, idempotency_records, outbox_events, sync_cursors</td><td>Audit append-only; idempotency uniqueness; outbox retries tracked.</td></tr></tbody></table></div></section>
-<section class="page-section" id="java-blueprint"><div class="section-heading"><div><h2>07 · Java Spring Boot package design</h2><p>One deployable modular monolith. Keep module API, application, domain and infrastructure explicit.</p></div></div><pre class="arch"><code>com.vyavsetu
+<section class="page-section" id="java-blueprint"><div class="section-heading"><div><h2>08 · Java Spring Boot package design</h2><p>One deployable modular monolith. Keep module API, application, domain and infrastructure explicit.</p></div></div><pre class="arch"><code>com.vyavsetu
 ├── VyavsetuApplication.java
 ├── common/{api,security,tracing,money,idempotency,outbox}
 ├── identity/{api,application,domain,infrastructure}
@@ -444,7 +680,7 @@ public record CreateOrderRequest(
     String customerNote
 ) {}</code></pre>
 </section>
-<section class="page-section" id="safety"><div class="section-heading"><div><h2>08 · Reliability, privacy & rollout</h2><p>Start with a narrow vertical slice, not a 137-endpoint implementation dump.</p></div></div><div class="cards-grid"><article class="panel"><h3>Tenant isolation</h3><p>Every tenant-owned query is scoped by authenticated membership and resource permission. UUID is not an authorization check.</p></article><article class="panel"><h3>Idempotency</h3><p>Same key + same body replays result; same key + different body returns 409.</p></article><article class="panel"><h3>Offline truth</h3><p>Persist entity + outbox atomically. First render doesn't wait for sync. ACK/conflict/rejection stay distinct.</p></article><article class="panel"><h3>Payment safety</h3><p>Verify provider webhooks and reconcile timeouts. Never infer paid from client callback.</p></article><article class="panel"><h3>Immutable audit</h3><p>Append order timeline, payment events, stock movements, invoice issuance and admin changes.</p></article><article class="panel"><h3>Privacy</h3><p>No tokens/OTP/card data in localStorage or logs; restrict driver location and media access.</p></article></div>
+<section class="page-section" id="safety"><div class="section-heading"><div><h2>09 · Reliability, privacy & rollout</h2><p>Start with a narrow vertical slice, not a 137-endpoint implementation dump.</p></div></div><div class="cards-grid"><article class="panel"><h3>Tenant isolation</h3><p>Every tenant-owned query is scoped by authenticated membership and resource permission. UUID is not an authorization check.</p></article><article class="panel"><h3>Idempotency</h3><p>Same key + same body replays result; same key + different body returns 409.</p></article><article class="panel"><h3>Offline truth</h3><p>Persist entity + outbox atomically. First render doesn't wait for sync. ACK/conflict/rejection stay distinct.</p></article><article class="panel"><h3>Payment safety</h3><p>Verify provider webhooks and reconcile timeouts. Never infer paid from client callback.</p></article><article class="panel"><h3>Immutable audit</h3><p>Append order timeline, payment events, stock movements, invoice issuance and admin changes.</p></article><article class="panel"><h3>Privacy</h3><p>No tokens/OTP/card data in localStorage or logs; restrict driver location and media access.</p></article></div>
 <ol><li><strong>Foundation:</strong> auth/session, tenant/RBAC, Flyway, request IDs, idempotency and OpenAPI.</li><li><strong>Marketplace slice:</strong> catalogue → quote/order → store accept/ready → driver delivery → customer timeline.</li><li><strong>Payments/chat:</strong> sandbox, webhook/reconciliation, payment tokenization, messages and safety.</li><li><strong>Offline POS:</strong> Drift migrations, provisional bills, sales, invoices, print jobs and sync conflict UI.</li><li><strong>Inventory/admin:</strong> receiving, reports, plans/subscriptions, CMS, roles, settings and audit.</li><li><strong>Hardening:</strong> tenant/concurrency/offline tests, webhook replay, backup/restore and rollback.</li></ol></section>
 <section class="page-section"><div class="callout warning"><strong>Scope protection:</strong> docs only. Existing app screens, logic and current localStorage keys have not been changed by this API architecture doc.</div><div class="source-links"><a href="API_ARCHITECTURE.md">Read complete Markdown source ↗</a><a href="developer-handoff.html">Back to developer handoff ↗</a></div></section>
 <footer class="doc-footer"><span>Vyavsetu · API architecture v1 proposal</span><span><a href="index.html">Developer portal</a> · <a href="../">Interactive demo</a> · <a href="https://github.com/manjesh2024/vyavsetu">GitHub</a></span></footer>
