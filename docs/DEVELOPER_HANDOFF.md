@@ -129,5 +129,6 @@ Production acceptance must additionally test: split screen, landscape, keyboard 
 - `app.html`: interactive demo surfaces and Developer Access hub.
 - `assets/`: logo assets.
 - `docs/ARCHITECTURE_FLOWCHARTS.md`: Mermaid source for the target workflows.
+- `docs/API_ARCHITECTURE.md` and `docs/api-architecture.html`: proposed REST endpoints, JSON contracts, current localStorage inventory, Drift/SQLite tables, PostgreSQL model and Spring Boot package design.
 - `docs/RESPONSIVE_DEVICE_MATRIX.md`: viewport and QA matrix.
 - `docs/QUICK_START_HINGLISH.md`: local demo startup.
