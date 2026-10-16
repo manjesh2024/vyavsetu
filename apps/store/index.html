@@ -37,4 +37,5 @@ function toggleStore(){isOpen=!isOpen;document.getElementById('openlabel').textC
 function saveProfile(){let name=document.getElementById('storename').value.trim();if(!name){toast('Store name can’t be empty');return}document.querySelector('.storebadge b').textContent=name;document.querySelector('.user b').textContent=name;toast('Store profile updated in this page')}
 let timer;function toast(t){const e=document.getElementById('toast');e.textContent=t;e.classList.add('show');clearTimeout(timer);timer=setTimeout(()=>e.classList.remove('show'),2300)}
 orders=load('vyavsetu-store-demo-orders',JSON.parse(JSON.stringify(originalOrders)));products=load('vyavsetu-store-demo-products',JSON.parse(JSON.stringify(initialProducts)));renderOrders('orderlist');renderOrders('allorders');renderProducts();
-</script></body></html>
+</script><!-- Shared Vyavsetu app preview integration lives in this prototype branch. -->
+</body></html>
