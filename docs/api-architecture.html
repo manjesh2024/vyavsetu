@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>API Architecture & Java Blueprint · Vyavsetu</title><meta name="description" content="Proposed 137-endpoint API contract, JSON examples, current browser storage inventory, Drift/SQLite schema and Java Spring Boot design."><link rel="stylesheet" href="docs.css"><script defer src="docs.js"></script>
+<style>
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:22px 0}.kpi{border:1px solid var(--line);background:var(--surface);border-radius:15px;padding:15px}.kpi b{display:block;font-size:25px;color:var(--ink)}.kpi span{font-size:10px;color:var(--muted)}
+.warning-note{border:1px solid #f2d9a6;background:#fff9e9;color:#805d1c;border-radius:13px;padding:14px 16px;font-size:12px;line-height:1.75;margin:18px 0}.section-nav{display:flex;flex-wrap:wrap;gap:7px;margin:14px 0 20px}.section-nav a{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:8px 11px;font-size:10px;font-weight:800}
+.api-toolbar{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0;align-items:center}.api-toolbar input,.api-toolbar select{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:11px 12px;border-radius:10px;font:inherit;font-size:12px}.api-toolbar input{flex:1;min-width:210px}.api-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:13px;background:var(--surface);max-height:760px}.api-table{border-collapse:collapse;width:100%;min-width:1060px;font-size:11px}.api-table th{position:sticky;top:0;background:var(--surface2);text-align:left;z-index:1}.api-table th,.api-table td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}.api-table td code{font-size:10px;word-break:break-word}
+.method{display:inline-block;border-radius:6px;padding:4px 6px;font-size:9px;font-weight:950;min-width:44px;text-align:center}.method.get{background:#e7f3ff;color:#1c5d99}.method.post{background:#e2f8e9;color:#176a3a}.method.patch{background:#fff0d7;color:#945c08}.method.put{background:#efe8ff;color:#6544a1}.method.delete{background:#ffe5e5;color:#a12626}
+.json-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.json-card{border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:15px;min-width:0}.json-card h3{font-size:14px;margin:0}.json-card p{color:var(--muted);font-size:11px;line-height:1.6}.json-head{display:flex;justify-content:space-between;align-items:start;gap:8px}.copy{border:1px solid var(--line);background:var(--surface2);color:var(--ink);padding:7px 9px;border-radius:8px;font-size:9px;font-weight:850}.json-card pre{overflow:auto;max-height:360px;border-radius:10px;background:#10283b;color:#eaf6f0;padding:13px;font-size:10px;line-height:1.6;white-space:pre}
+.doc-table-wrap{overflow:auto}.data-table{border-collapse:collapse;width:100%;min-width:850px;font-size:11px}.data-table th,.data-table td{border-bottom:1px solid var(--line);padding:10px;text-align:left;vertical-align:top}.data-table th{background:var(--surface2);position:sticky;top:0}.data-table code{font-size:10px;overflow-wrap:anywhere}
+.module-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.module-card{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:13px}.module-card b{display:block;font-size:11px}.module-card p{font-size:10px;line-height:1.6;color:var(--muted);margin:6px 0 0}pre.arch{background:#10283b;color:#eaf6f0;border-radius:14px;padding:16px;overflow:auto;font-size:11px;line-height:1.65}
+@media(max-width:850px){.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.json-grid{grid-template-columns:1fr}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.kpi{padding:11px}.kpi b{font-size:21px}.module-grid{grid-template-columns:1fr}.api-toolbar{display:grid;grid-template-columns:1fr}.api-toolbar input{min-width:0;width:100%}.section-nav a{font-size:9px;padding:7px 9px}}
+</style></head><body data-doc-page="api">
+<header class="doc-top"><a class="doc-brand" href="index.html"><img data-brand-logo data-light="../assets/vyavsetu-horizontal.svg" data-dark="../assets/vyavsetu-horizontal-dark.svg" src="../assets/vyavsetu-horizontal.svg" alt="Vyavsetu"><span>API ARCHITECTURE</span></a><div class="doc-actions"><button class="doc-button" data-theme-toggle>Theme · Light</button><a class="doc-button" href="../">Open demo ↗</a></div></header>
+<div class="doc-layout"><nav class="doc-side" aria-label="Documentation navigation"><div class="side-caption">Developer portal</div><a href="index.html"><i class="side-dot"></i> Documentation home</a><a href="architecture-flowcharts.html"><i class="side-dot"></i> Architecture & flows</a><a href="developer-handoff.html"><i class="side-dot"></i> Developer handoff</a><a href="api-architecture.html" aria-current="page"><i class="side-dot"></i> API + Java blueprint</a><a href="brand-guidelines.html"><i class="side-dot"></i> Brand guidelines</a><a href="responsive-device-matrix.html"><i class="side-dot"></i> Responsive & QA</a><a href="test-report.html"><i class="side-dot"></i> Test report</a><a href="quick-start-hinglish.html"><i class="side-dot"></i> Quick start · Hinglish</a><div class="side-note"><strong>Proposed design</strong><br>These are design docs, not live backend services. Current HTML apps remain browser-local demos.</div></nav>
+<main class="doc-main"><div class="breadcrumbs"><a href="index.html">Developer portal</a> / API Architecture</div>
+<section class="doc-hero"><div class="eyebrow">Production blueprint · contract first</div><h1>Vyavsetu API architecture & Java design</h1><p>One source of truth across Customer, Store, Driver, POS, Business Admin and Super Admin—with JSON contracts, offline tables, tenant isolation and Java implementation boundaries.</p><div class="hero-pills"><span class="pill">REST · /api/v1</span><span class="pill">137 proposed operations</span><span class="pill">Spring Boot modular monolith</span><span class="pill">PostgreSQL</span><span class="pill">Drift / SQLite</span></div><div class="source-links"><a href="API_ARCHITECTURE.md" target="_blank" rel="noopener">Open Markdown source ↗</a><a href="../apps/" target="_blank" rel="noopener">Open mobile app preview ↗</a></div></section>
+<div class="warning-note"><strong>Read first:</strong> this is target architecture, not a claim these endpoints/tables already exist. No existing app/UI behaviour is changed. HTML prototype uses browser localStorage; production Flutter clients should use Drift/SQLite for structured offline data.</div>
+<div class="kpi-grid"><div class="kpi"><b>137</b><span>Proposed business REST operations</span></div><div class="kpi"><b>36</b><span>Current localStorage keys inventoried</span></div><div class="kpi"><b>30</b><span>Proposed local tables</span></div><div class="kpi"><b>12</b><span>API module groups</span></div></div>
+<div class="section-nav"><a href="#architecture">Architecture</a><a href="#endpoint-catalogue">Endpoint catalogue</a><a href="#json-contracts">JSON contracts</a><a href="#browser-storage">Current LocalStorage</a><a href="#local-db">Local tables</a><a href="#server-db">PostgreSQL</a><a href="#java-blueprint">Java packages</a><a href="#safety">Security & phases</a></div>
+<section class="page-section" id="architecture"><div class="section-heading"><div><h2>01 · Architecture at a glance</h2><p>Monolith first, with explicit module boundaries and one server-authoritative business record.</p></div></div><div class="diagram-board"><div class="architecture-stack">
+<div class="layer"><div class="layer-label">Client surfaces</div><div class="node-grid"><div class="node">Customer App<small>Flutter mobile</small></div><div class="node">Store App<small>Flutter mobile/web</small></div><div class="node">Driver App<small>Flutter mobile</small></div><div class="node">POS / Admin<small>Flutter adaptive UI</small></div></div></div><div class="diagram-arrow">↓ HTTPS JSON · /api/v1 · authenticated + tenant scoped</div>
+<div class="layer"><div class="layer-label">Java API boundary</div><div class="node-grid"><div class="node primary">Spring Security<small>Actor + tenant + RBAC</small></div><div class="node">DTO validation</div><div class="node">Idempotency</div><div class="node">Audit + request IDs</div></div></div><div class="diagram-arrow">↓ module application services</div>
+<div class="layer"><div class="layer-label">Modular monolith</div><div class="node-grid"><div class="node">Identity / Tenancy</div><div class="node">Catalog / Pricing</div><div class="node">Orders / Payments</div><div class="node">POS / Invoicing</div><div class="node">Inventory / Purchasing</div><div class="node">Merchant / Driver</div><div class="node">SaaS / Admin</div><div class="node">Sync / Notify / Audit</div></div></div><div class="diagram-arrow">↓ transactions · outbox · delta cursor</div>
+<div class="layer"><div class="layer-label">Persistence</div><div class="node-grid"><div class="node green">PostgreSQL<small>Canonical shared data</small></div><div class="node">Drift / SQLite<small>Offline client cache</small></div><div class="node">Object storage<small>Images / proof / media</small></div><div class="node">Push / realtime<small>Optional transport</small></div></div></div></div></div></section>
+<section class="page-section" id="endpoint-catalogue"><div class="section-heading"><div><h2>02 · REST endpoint catalogue</h2><p>Filter all 137 proposed operations by module, method or path.</p></div></div><div class="api-toolbar"><input id="apiSearch" type="search" placeholder="Search endpoint, module, role or request shape..."><select id="apiGroup"><option value="">All modules (137)</option><option value="Identity &amp; sessions">Identity &amp; sessions (8)</option><option value="Tenant, store &amp; RBAC">Tenant, store &amp; RBAC (13)</option><option value="Customer profile &amp; notifications">Customer profile &amp; notifications (12)</option><option value="Store discovery, catalogue &amp; coupons">Store discovery, catalogue &amp; coupons (10)</option><option value="Checkout, orders, payments &amp; tracking">Checkout, orders, payments &amp; tracking (14)</option><option value="Chat &amp; safety">Chat &amp; safety (5)</option><option value="Merchant orders, earnings &amp; payouts">Merchant orders, earnings &amp; payouts (9)</option><option value="Driver, route &amp; proof of delivery">Driver, route &amp; proof of delivery (13)</option><option value="POS, bills, invoices &amp; printing">POS, bills, invoices &amp; printing (13)</option><option value="Inventory, suppliers, purchasing &amp; reports">Inventory, suppliers, purchasing &amp; reports (13)</option><option value="SaaS &amp; Web Admin">SaaS &amp; Web Admin (24)</option><option value="Offline sync">Offline sync (3)</option></select><select id="apiMethod"><option value="">All methods</option><option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option></select><span id="apiCount" style="font-size:10px;color:var(--muted)">Showing 137 operations</span></div><div class="api-table-wrap"><table class="api-table"><thead><tr><th>#</th><th>Module</th><th>Method</th><th>Endpoint</th><th>Access</th><th>Request body/query</th><th>Success data</th></tr></thead><tbody id="endpointRows"><tr data-group="Identity &amp; sessions"><td>001</td><td>Identity &amp; sessions</td><td><span class="method post">POST</span></td><td><code>/auth/register</code></td><td>Public</td><td>displayName, email or phone, password</td><td>AuthSession</td></tr>
+<tr data-group="Identity &amp; sessions"><td>002</td><td>Identity &amp; sessions</td><td><span class="method post">POST</span></td><td><code>/auth/login</code></td><td>Public</td><td>identifier, password</td><td>AuthSession</td></tr>
+<tr data-group="Identity &amp; sessions"><td>003</td><td>Identity &amp; sessions</td><td><span class="method post">POST</span></td><td><code>/auth/otp/request</code></td><td>Public</td><td>phone, purpose</td><td>challengeId, expiry, resendAfter</td></tr>
+<tr data-group="Identity &amp; sessions"><td>004</td><td>Identity &amp; sessions</td><td><span class="method post">POST</span></td><td><code>/auth/otp/verify</code></td><td>Public</td><td>challengeId, otp</td><td>AuthSession</td></tr>
+<tr data-group="Identity &amp; sessions"><td>005</td><td>Identity &amp; sessions</td><td><span class="method post">POST</span></td><td><code>/auth/token/refresh</code></td><td>Refresh token</td><td>refreshToken</td><td>AuthSession; rotated refresh token</td></tr>
+<tr data-group="Identity &amp; sessions"><td>006</td><td>Identity &amp; sessions</td><td><span class="method post">POST</span></td><td><code>/auth/logout</code></td><td>Authenticated</td><td>refreshToken?</td><td>204</td></tr>
+<tr data-group="Identity &amp; sessions"><td>007</td><td>Identity &amp; sessions</td><td><span class="method get">GET</span></td><td><code>/auth/me</code></td><td>Authenticated</td><td>—</td><td>UserProfile</td></tr>
+<tr data-group="Identity &amp; sessions"><td>008</td><td>Identity &amp; sessions</td><td><span class="method get">GET</span></td><td><code>/auth/memberships</code></td><td>Authenticated</td><td>—</td><td>Membership[]</td></tr>
+<tr data-group="Tenant, store &amp; RBAC"><td>009</td><td>Tenant, store &amp; RBAC</td><td><span class="method get">GET</span></td><td><code>/tenants/current</code></td><td>Authenticated</td><td>—</td><td>TenantContext</td></tr>
+<tr data-group="Tenant, store &amp; RBAC"><td>010</td><td>Tenant, store &amp; RBAC</td><td><span class="method get">GET</span></td><td><code>/tenants/{tenantId}/stores</code></td><td>Tenant member</td><td>status?, cursor, limit</td><td>Page&lt;Store&gt;</td></tr>
+<tr data-group="Tenant, store &amp; RBAC"><td>011</td><td>Tenant, store &amp; RBAC</td><td><span class="method post">POST</span></td><td><code>/tenants/{tenantId}/stores</code></td><td>Tenant admin</td><td>name, type, currency, timezone, address</td><td>Store</td></tr>
+<tr data-group="Tenant, store &amp; RBAC"><td>012</td><td>Tenant, store &amp; RBAC</td><td><span class="method get">GET</span></td><td><code>/stores/{storeId}</code></td><td>Public-safe fields or store member</td><td>—</td><td>Store</td></tr>
+<tr data-group="Tenant, store &amp; RBAC"><td>013</td><td>Tenant, store &amp; RBAC</td><td><span class="method patch">PATCH</span></td><td><code>/stores/{storeId}</code></td><td>Store admin</td><td>name?, address?, status?, contact?</td><td>Store</td></tr>
+<tr data-group="Tenant, store &amp; RBAC"><td>014</td><td>Tenant, store &amp; RBAC</td><td><span class="method get">GET</span></td><td><code>/stores/{storeId}/hours</code></td><td>Public</td><td>—</td><td>WeeklyHours[]</td></tr>
+<tr data-group="Tenant, store &amp; RBAC"><td>015</td><td>Tenant, store &amp; RBAC</td><td><span class="method put">PUT</span></td><td><code>/stores/{storeId}/hours</code></td><td>Store admin</td><td>weeklyHours[]</td><td>WeeklyHours[]</td></tr>
+<tr data-group="Tenant, store &amp; RBAC"><td>016</td><td>Tenant, store &amp; RBAC</td><td><span class="method get">GET</span></td><td><code>/tenants/{tenantId}/members</code></td><td>Tenant admin</td><td>status?, cursor, limit</td><td>Page&lt;Member&gt;</td></tr>
+<tr data-group="Tenant, store &amp; RBAC"><td>017</td><td>Tenant, store &amp; RBAC</td><td><span class="method post">POST</span></td><td><code>/tenants/{tenantId}/members</code></td><td>Tenant admin</td><td>userId or invitation, roleIds[], storeIds[]</td><td>Member</td></tr>
+<tr data-group="Tenant, store &amp; RBAC"><td>018</td><td>Tenant, store &amp; RBAC</td><td><span class="method patch">PATCH</span></td><td><code>/tenants/{tenantId}/members/{memberId}</code></td><td>Tenant admin</td><td>status?, storeIds?, displayName?</td><td>Member</td></tr>
+<tr data-group="Tenant, store &amp; RBAC"><td>019</td><td>Tenant, store &amp; RBAC</td><td><span class="method get">GET</span></td><td><code>/roles</code></td><td>Authenticated</td><td>scope?</td><td>Role[]</td></tr>
+<tr data-group="Tenant, store &amp; RBAC"><td>020</td><td>Tenant, store &amp; RBAC</td><td><span class="method get">GET</span></td><td><code>/permissions</code></td><td>Authenticated</td><td>—</td><td>Permission[]</td></tr>
+<tr data-group="Tenant, store &amp; RBAC"><td>021</td><td>Tenant, store &amp; RBAC</td><td><span class="method put">PUT</span></td><td><code>/members/{memberId}/roles</code></td><td>Tenant admin</td><td>roleIds[]</td><td>MemberRoles</td></tr>
+<tr data-group="Customer profile &amp; notifications"><td>022</td><td>Customer profile &amp; notifications</td><td><span class="method get">GET</span></td><td><code>/customer/profile</code></td><td>Customer</td><td>—</td><td>CustomerProfile</td></tr>
+<tr data-group="Customer profile &amp; notifications"><td>023</td><td>Customer profile &amp; notifications</td><td><span class="method patch">PATCH</span></td><td><code>/customer/profile</code></td><td>Customer</td><td>displayName?, email?, phone?, photoAssetId?</td><td>CustomerProfile</td></tr>
+<tr data-group="Customer profile &amp; notifications"><td>024</td><td>Customer profile &amp; notifications</td><td><span class="method get">GET</span></td><td><code>/customer/addresses</code></td><td>Customer</td><td>—</td><td>Address[]</td></tr>
+<tr data-group="Customer profile &amp; notifications"><td>025</td><td>Customer profile &amp; notifications</td><td><span class="method post">POST</span></td><td><code>/customer/addresses</code></td><td>Customer</td><td>label, recipient, phone, address, lat?, lng?</td><td>Address</td></tr>
+<tr data-group="Customer profile &amp; notifications"><td>026</td><td>Customer profile &amp; notifications</td><td><span class="method patch">PATCH</span></td><td><code>/customer/addresses/{addressId}</code></td><td>Customer</td><td>address fields?</td><td>Address</td></tr>
+<tr data-group="Customer profile &amp; notifications"><td>027</td><td>Customer profile &amp; notifications</td><td><span class="method delete">DELETE</span></td><td><code>/customer/addresses/{addressId}</code></td><td>Customer</td><td>—</td><td>204</td></tr>
+<tr data-group="Customer profile &amp; notifications"><td>028</td><td>Customer profile &amp; notifications</td><td><span class="method get">GET</span></td><td><code>/customer/payment-methods</code></td><td>Customer</td><td>—</td><td>PaymentMethod[]; masked only</td></tr>
+<tr data-group="Customer profile &amp; notifications"><td>029</td><td>Customer profile &amp; notifications</td><td><span class="method post">POST</span></td><td><code>/customer/payment-methods/setup-intents</code></td><td>Customer</td><td>provider, returnUrl?</td><td>SetupIntent</td></tr>
+<tr data-group="Customer profile &amp; notifications"><td>030</td><td>Customer profile &amp; notifications</td><td><span class="method delete">DELETE</span></td><td><code>/customer/payment-methods/{paymentMethodId}</code></td><td>Customer</td><td>—</td><td>204</td></tr>
+<tr data-group="Customer profile &amp; notifications"><td>031</td><td>Customer profile &amp; notifications</td><td><span class="method put">PUT</span></td><td><code>/devices/{deviceId}/push-token</code></td><td>Authenticated</td><td>platform, pushToken, appVersion, locale</td><td>DeviceRegistration</td></tr>
+<tr data-group="Customer profile &amp; notifications"><td>032</td><td>Customer profile &amp; notifications</td><td><span class="method get">GET</span></td><td><code>/notifications</code></td><td>Authenticated</td><td>unreadOnly?, cursor, limit</td><td>Page&lt;Notification&gt;</td></tr>
+<tr data-group="Customer profile &amp; notifications"><td>033</td><td>Customer profile &amp; notifications</td><td><span class="method post">POST</span></td><td><code>/notifications/{notificationId}/read</code></td><td>Authenticated</td><td>—</td><td>Notification</td></tr>
+<tr data-group="Store discovery, catalogue &amp; coupons"><td>034</td><td>Store discovery, catalogue &amp; coupons</td><td><span class="method get">GET</span></td><td><code>/stores</code></td><td>Public</td><td>q?, categoryId?, lat?, lng?, radiusKm?, openNow?, cursor, limit</td><td>Page&lt;StoreCard&gt;</td></tr>
+<tr data-group="Store discovery, catalogue &amp; coupons"><td>035</td><td>Store discovery, catalogue &amp; coupons</td><td><span class="method get">GET</span></td><td><code>/stores/{storeId}/products</code></td><td>Public</td><td>q?, categoryId?, availableOnly?, cursor, limit</td><td>Page&lt;ProductCard&gt;</td></tr>
+<tr data-group="Store discovery, catalogue &amp; coupons"><td>036</td><td>Store discovery, catalogue &amp; coupons</td><td><span class="method get">GET</span></td><td><code>/catalog/categories</code></td><td>Public</td><td>storeId?, parentId?</td><td>Category[]</td></tr>
+<tr data-group="Store discovery, catalogue &amp; coupons"><td>037</td><td>Store discovery, catalogue &amp; coupons</td><td><span class="method get">GET</span></td><td><code>/products/{productId}</code></td><td>Public</td><td>—</td><td>ProductDetail</td></tr>
+<tr data-group="Store discovery, catalogue &amp; coupons"><td>038</td><td>Store discovery, catalogue &amp; coupons</td><td><span class="method post">POST</span></td><td><code>/merchant/products</code></td><td>Store product permission</td><td>name, sku?, categoryId, unit, priceMinor, currency, taxCode?</td><td>Product</td></tr>
+<tr data-group="Store discovery, catalogue &amp; coupons"><td>039</td><td>Store discovery, catalogue &amp; coupons</td><td><span class="method patch">PATCH</span></td><td><code>/merchant/products/{productId}</code></td><td>Store product permission</td><td>name?, categoryId?, unit?, priceMinor?, taxCode?</td><td>Product</td></tr>
+<tr data-group="Store discovery, catalogue &amp; coupons"><td>040</td><td>Store discovery, catalogue &amp; coupons</td><td><span class="method delete">DELETE</span></td><td><code>/merchant/products/{productId}</code></td><td>Store admin</td><td>—</td><td>204</td></tr>
+<tr data-group="Store discovery, catalogue &amp; coupons"><td>041</td><td>Store discovery, catalogue &amp; coupons</td><td><span class="method put">PUT</span></td><td><code>/merchant/products/{productId}/availability</code></td><td>Store staff</td><td>available, stockPolicy?</td><td>StoreProductAvailability</td></tr>
+<tr data-group="Store discovery, catalogue &amp; coupons"><td>042</td><td>Store discovery, catalogue &amp; coupons</td><td><span class="method get">GET</span></td><td><code>/coupons</code></td><td>Public or Customer</td><td>storeId?, activeOnly?</td><td>CouponCard[]</td></tr>
+<tr data-group="Store discovery, catalogue &amp; coupons"><td>043</td><td>Store discovery, catalogue &amp; coupons</td><td><span class="method post">POST</span></td><td><code>/coupons/validate</code></td><td>Customer</td><td>code, storeId, items[]</td><td>CouponQuote</td></tr>
+<tr data-group="Checkout, orders, payments &amp; tracking"><td>044</td><td>Checkout, orders, payments &amp; tracking</td><td><span class="method post">POST</span></td><td><code>/checkout/quote</code></td><td>Customer</td><td>storeId, fulfilmentType, addressId?, items[], couponCode?</td><td>CheckoutQuote</td></tr>
+<tr data-group="Checkout, orders, payments &amp; tracking"><td>045</td><td>Checkout, orders, payments &amp; tracking</td><td><span class="method post">POST</span></td><td><code>/orders</code></td><td>Customer</td><td>quoteId, clientOrderId, fulfilmentType, addressId?, paymentMethod, customerNote?</td><td>Order</td></tr>
+<tr data-group="Checkout, orders, payments &amp; tracking"><td>046</td><td>Checkout, orders, payments &amp; tracking</td><td><span class="method get">GET</span></td><td><code>/orders</code></td><td>Customer or authorized staff</td><td>status?, storeId?, from?, to?, cursor, limit</td><td>Page&lt;OrderSummary&gt;</td></tr>
+<tr data-group="Checkout, orders, payments &amp; tracking"><td>047</td><td>Checkout, orders, payments &amp; tracking</td><td><span class="method get">GET</span></td><td><code>/orders/{orderId}</code></td><td>Order participant or authorized staff</td><td>—</td><td>OrderDetail</td></tr>
+<tr data-group="Checkout, orders, payments &amp; tracking"><td>048</td><td>Checkout, orders, payments &amp; tracking</td><td><span class="method get">GET</span></td><td><code>/orders/{orderId}/timeline</code></td><td>Order participant</td><td>—</td><td>OrderTimelineEvent[]</td></tr>
+<tr data-group="Checkout, orders, payments &amp; tracking"><td>049</td><td>Checkout, orders, payments &amp; tracking</td><td><span class="method post">POST</span></td><td><code>/orders/{orderId}/cancel</code></td><td>Customer or authorized staff</td><td>reasonCode, note?</td><td>Order + cancellation/refund state</td></tr>
+<tr data-group="Checkout, orders, payments &amp; tracking"><td>050</td><td>Checkout, orders, payments &amp; tracking</td><td><span class="method post">POST</span></td><td><code>/orders/{orderId}/reorder</code></td><td>Customer</td><td>addressId?, substitutionsAllowed?</td><td>CartDraft</td></tr>
+<tr data-group="Checkout, orders, payments &amp; tracking"><td>051</td><td>Checkout, orders, payments &amp; tracking</td><td><span class="method post">POST</span></td><td><code>/orders/{orderId}/payment-intents</code></td><td>Customer</td><td>provider, paymentMethodId?</td><td>PaymentIntent</td></tr>
+<tr data-group="Checkout, orders, payments &amp; tracking"><td>052</td><td>Checkout, orders, payments &amp; tracking</td><td><span class="method get">GET</span></td><td><code>/payments/{paymentId}</code></td><td>Payment owner or authorized staff</td><td>—</td><td>PaymentStatus</td></tr>
+<tr data-group="Checkout, orders, payments &amp; tracking"><td>053</td><td>Checkout, orders, payments &amp; tracking</td><td><span class="method post">POST</span></td><td><code>/payments/{paymentId}/reconcile</code></td><td>Payment owner or authorized staff</td><td>clientObservedStatus?</td><td>PaymentStatus</td></tr>
+<tr data-group="Checkout, orders, payments &amp; tracking"><td>054</td><td>Checkout, orders, payments &amp; tracking</td><td><span class="method post">POST</span></td><td><code>/webhooks/payments/{provider}</code></td><td>Signed provider webhook</td><td>Provider event JSON</td><td>200 acknowledgement</td></tr>
+<tr data-group="Checkout, orders, payments &amp; tracking"><td>055</td><td>Checkout, orders, payments &amp; tracking</td><td><span class="method post">POST</span></td><td><code>/orders/{orderId}/reviews</code></td><td>Customer with completed order</td><td>rating, comment?, productRatings?</td><td>Review</td></tr>
+<tr data-group="Checkout, orders, payments &amp; tracking"><td>056</td><td>Checkout, orders, payments &amp; tracking</td><td><span class="method get">GET</span></td><td><code>/orders/{orderId}/tracking</code></td><td>Order participant or assigned driver</td><td>—</td><td>OrderTracking</td></tr>
+<tr data-group="Checkout, orders, payments &amp; tracking"><td>057</td><td>Checkout, orders, payments &amp; tracking</td><td><span class="method post">POST</span></td><td><code>/orders/{orderId}/chat-conversations</code></td><td>Order participant</td><td>participantId</td><td>Conversation</td></tr>
+<tr data-group="Chat &amp; safety"><td>058</td><td>Chat &amp; safety</td><td><span class="method get">GET</span></td><td><code>/conversations</code></td><td>Authenticated participant</td><td>orderId?, cursor, limit</td><td>Page&lt;Conversation&gt;</td></tr>
+<tr data-group="Chat &amp; safety"><td>059</td><td>Chat &amp; safety</td><td><span class="method get">GET</span></td><td><code>/conversations/{conversationId}/messages</code></td><td>Conversation participant</td><td>before?, limit</td><td>Page&lt;Message&gt;</td></tr>
+<tr data-group="Chat &amp; safety"><td>060</td><td>Chat &amp; safety</td><td><span class="method post">POST</span></td><td><code>/conversations/{conversationId}/messages</code></td><td>Conversation participant</td><td>clientMessageId, text?, attachmentIds[], replyToMessageId?</td><td>Message</td></tr>
+<tr data-group="Chat &amp; safety"><td>061</td><td>Chat &amp; safety</td><td><span class="method post">POST</span></td><td><code>/messages/{messageId}/reports</code></td><td>Conversation participant</td><td>reasonCode, details?</td><td>SafetyReport</td></tr>
+<tr data-group="Chat &amp; safety"><td>062</td><td>Chat &amp; safety</td><td><span class="method post">POST</span></td><td><code>/conversations/{conversationId}/blocks</code></td><td>Conversation participant</td><td>blockedUserId, reason?</td><td>BlockRecord</td></tr>
+<tr data-group="Merchant orders, earnings &amp; payouts"><td>063</td><td>Merchant orders, earnings &amp; payouts</td><td><span class="method get">GET</span></td><td><code>/merchant/orders</code></td><td>Store staff</td><td>status?, from?, to?, cursor, limit</td><td>Page&lt;MerchantOrder&gt;</td></tr>
+<tr data-group="Merchant orders, earnings &amp; payouts"><td>064</td><td>Merchant orders, earnings &amp; payouts</td><td><span class="method get">GET</span></td><td><code>/merchant/orders/{orderId}</code></td><td>Store staff</td><td>—</td><td>MerchantOrderDetail</td></tr>
+<tr data-group="Merchant orders, earnings &amp; payouts"><td>065</td><td>Merchant orders, earnings &amp; payouts</td><td><span class="method post">POST</span></td><td><code>/merchant/orders/{orderId}/accept</code></td><td>Store staff</td><td>estimatedPrepMinutes?, note?</td><td>OrderStatusResult</td></tr>
+<tr data-group="Merchant orders, earnings &amp; payouts"><td>066</td><td>Merchant orders, earnings &amp; payouts</td><td><span class="method post">POST</span></td><td><code>/merchant/orders/{orderId}/reject</code></td><td>Store staff</td><td>reasonCode, note?</td><td>OrderCancellationResult</td></tr>
+<tr data-group="Merchant orders, earnings &amp; payouts"><td>067</td><td>Merchant orders, earnings &amp; payouts</td><td><span class="method post">POST</span></td><td><code>/merchant/orders/{orderId}/preparing</code></td><td>Store staff</td><td>expectedReadyAt?</td><td>OrderStatusResult</td></tr>
+<tr data-group="Merchant orders, earnings &amp; payouts"><td>068</td><td>Merchant orders, earnings &amp; payouts</td><td><span class="method post">POST</span></td><td><code>/merchant/orders/{orderId}/ready</code></td><td>Store staff</td><td>readyItems?</td><td>OrderStatusResult + DispatchSummary</td></tr>
+<tr data-group="Merchant orders, earnings &amp; payouts"><td>069</td><td>Merchant orders, earnings &amp; payouts</td><td><span class="method post">POST</span></td><td><code>/merchant/orders/{orderId}/handover</code></td><td>Store staff</td><td>driverJobId, handoverCode?</td><td>OrderStatusResult</td></tr>
+<tr data-group="Merchant orders, earnings &amp; payouts"><td>070</td><td>Merchant orders, earnings &amp; payouts</td><td><span class="method get">GET</span></td><td><code>/merchant/earnings</code></td><td>Store owner/accounting</td><td>from, to, currency?</td><td>EarningsReport</td></tr>
+<tr data-group="Merchant orders, earnings &amp; payouts"><td>071</td><td>Merchant orders, earnings &amp; payouts</td><td><span class="method get">GET</span></td><td><code>/merchant/payouts</code></td><td>Store owner/accounting</td><td>status?, cursor, limit</td><td>Page&lt;Payout&gt;</td></tr>
+<tr data-group="Driver, route &amp; proof of delivery"><td>072</td><td>Driver, route &amp; proof of delivery</td><td><span class="method get">GET</span></td><td><code>/driver/profile</code></td><td>Driver</td><td>—</td><td>DriverProfile</td></tr>
+<tr data-group="Driver, route &amp; proof of delivery"><td>073</td><td>Driver, route &amp; proof of delivery</td><td><span class="method patch">PATCH</span></td><td><code>/driver/profile</code></td><td>Driver</td><td>displayName?, photoAssetId?, locale?, emergencyContact?</td><td>DriverProfile</td></tr>
+<tr data-group="Driver, route &amp; proof of delivery"><td>074</td><td>Driver, route &amp; proof of delivery</td><td><span class="method patch">PATCH</span></td><td><code>/driver/availability</code></td><td>Driver</td><td>availability, location?</td><td>DriverAvailability</td></tr>
+<tr data-group="Driver, route &amp; proof of delivery"><td>075</td><td>Driver, route &amp; proof of delivery</td><td><span class="method get">GET</span></td><td><code>/driver/jobs</code></td><td>Driver</td><td>status?, cursor, limit</td><td>Page&lt;DriverJob&gt;</td></tr>
+<tr data-group="Driver, route &amp; proof of delivery"><td>076</td><td>Driver, route &amp; proof of delivery</td><td><span class="method post">POST</span></td><td><code>/driver/jobs/{jobId}/accept</code></td><td>Driver</td><td>acceptedAtClient?</td><td>DriverJob</td></tr>
+<tr data-group="Driver, route &amp; proof of delivery"><td>077</td><td>Driver, route &amp; proof of delivery</td><td><span class="method post">POST</span></td><td><code>/driver/jobs/{jobId}/reject</code></td><td>Driver</td><td>reasonCode</td><td>DriverJob</td></tr>
+<tr data-group="Driver, route &amp; proof of delivery"><td>078</td><td>Driver, route &amp; proof of delivery</td><td><span class="method post">POST</span></td><td><code>/driver/jobs/{jobId}/pickup</code></td><td>Assigned driver</td><td>pickupCode?, itemsVerified?</td><td>DriverJob</td></tr>
+<tr data-group="Driver, route &amp; proof of delivery"><td>079</td><td>Driver, route &amp; proof of delivery</td><td><span class="method post">POST</span></td><td><code>/driver/jobs/{jobId}/start</code></td><td>Assigned driver</td><td>startedAtClient?</td><td>DriverJob</td></tr>
+<tr data-group="Driver, route &amp; proof of delivery"><td>080</td><td>Driver, route &amp; proof of delivery</td><td><span class="method post">POST</span></td><td><code>/driver/jobs/{jobId}/location</code></td><td>Assigned driver</td><td>lat, lng, accuracyM?, heading?, speedMps?, capturedAt</td><td>LocationAcknowledgement</td></tr>
+<tr data-group="Driver, route &amp; proof of delivery"><td>081</td><td>Driver, route &amp; proof of delivery</td><td><span class="method post">POST</span></td><td><code>/driver/jobs/{jobId}/complete</code></td><td>Assigned driver</td><td>otp, proofAssetIds[], note?</td><td>DriverJob + OrderStatus</td></tr>
+<tr data-group="Driver, route &amp; proof of delivery"><td>082</td><td>Driver, route &amp; proof of delivery</td><td><span class="method get">GET</span></td><td><code>/driver/jobs/{jobId}/route</code></td><td>Assigned driver</td><td>destination=STORE or CUSTOMER</td><td>RouteSummary</td></tr>
+<tr data-group="Driver, route &amp; proof of delivery"><td>083</td><td>Driver, route &amp; proof of delivery</td><td><span class="method get">GET</span></td><td><code>/driver/deliveries</code></td><td>Driver</td><td>from?, to?, cursor, limit</td><td>Page&lt;DeliveryHistoryItem&gt;</td></tr>
+<tr data-group="Driver, route &amp; proof of delivery"><td>084</td><td>Driver, route &amp; proof of delivery</td><td><span class="method post">POST</span></td><td><code>/driver/deliveries/{deliveryId}/proof</code></td><td>Assigned driver</td><td>multipart file, type, note?</td><td>ProofAsset</td></tr>
+<tr data-group="POS, bills, invoices &amp; printing"><td>085</td><td>POS, bills, invoices &amp; printing</td><td><span class="method get">GET</span></td><td><code>/pos/catalog</code></td><td>Authenticated store staff</td><td>q?, categoryId?, updatedSince?</td><td>CatalogDelta/Page&lt;Product&gt;</td></tr>
+<tr data-group="POS, bills, invoices &amp; printing"><td>086</td><td>POS, bills, invoices &amp; printing</td><td><span class="method post">POST</span></td><td><code>/pos/quotes</code></td><td>Store staff</td><td>storeId, lines[], customerId?, discountCode?</td><td>POSQuote</td></tr>
+<tr data-group="POS, bills, invoices &amp; printing"><td>087</td><td>POS, bills, invoices &amp; printing</td><td><span class="method post">POST</span></td><td><code>/pos/sales</code></td><td>Store staff or offline sync</td><td>clientSaleId, lines[], customerId?, paymentLines[], occurredAt, deviceId</td><td>Sale</td></tr>
+<tr data-group="POS, bills, invoices &amp; printing"><td>088</td><td>POS, bills, invoices &amp; printing</td><td><span class="method get">GET</span></td><td><code>/pos/sales</code></td><td>Store staff/accounting</td><td>from, to, status?, cursor, limit</td><td>Page&lt;SaleSummary&gt;</td></tr>
+<tr data-group="POS, bills, invoices &amp; printing"><td>089</td><td>POS, bills, invoices &amp; printing</td><td><span class="method get">GET</span></td><td><code>/pos/sales/{saleId}</code></td><td>Store staff/accounting</td><td>—</td><td>SaleDetail</td></tr>
+<tr data-group="POS, bills, invoices &amp; printing"><td>090</td><td>POS, bills, invoices &amp; printing</td><td><span class="method post">POST</span></td><td><code>/pos/sales/{saleId}/payments</code></td><td>Store staff</td><td>method, amountMinor, currency, providerReference?</td><td>PaymentRecord</td></tr>
+<tr data-group="POS, bills, invoices &amp; printing"><td>091</td><td>POS, bills, invoices &amp; printing</td><td><span class="method post">POST</span></td><td><code>/pos/sales/{saleId}/finalize</code></td><td>Store staff/accounting</td><td>finalizationRequestId, taxContextVersion?</td><td>Invoice</td></tr>
+<tr data-group="POS, bills, invoices &amp; printing"><td>092</td><td>POS, bills, invoices &amp; printing</td><td><span class="method get">GET</span></td><td><code>/invoices/{invoiceId}</code></td><td>Invoice owner or authorized staff</td><td>—</td><td>InvoiceDocument</td></tr>
+<tr data-group="POS, bills, invoices &amp; printing"><td>093</td><td>POS, bills, invoices &amp; printing</td><td><span class="method post">POST</span></td><td><code>/invoices/{invoiceId}/print-jobs</code></td><td>Authorized staff/device</td><td>printerId?, format, copies?</td><td>PrintJob</td></tr>
+<tr data-group="POS, bills, invoices &amp; printing"><td>094</td><td>POS, bills, invoices &amp; printing</td><td><span class="method get">GET</span></td><td><code>/print-jobs/{printJobId}</code></td><td>Authorized staff/device</td><td>—</td><td>PrintJob</td></tr>
+<tr data-group="POS, bills, invoices &amp; printing"><td>095</td><td>POS, bills, invoices &amp; printing</td><td><span class="method post">POST</span></td><td><code>/pos/provisional-bills</code></td><td>Store staff/device</td><td>clientBillId, lines[], customerId?, note?</td><td>ProvisionalBill</td></tr>
+<tr data-group="POS, bills, invoices &amp; printing"><td>096</td><td>POS, bills, invoices &amp; printing</td><td><span class="method get">GET</span></td><td><code>/pos/provisional-bills</code></td><td>Store staff/device</td><td>status?, cursor, limit</td><td>Page&lt;ProvisionalBill&gt;</td></tr>
+<tr data-group="POS, bills, invoices &amp; printing"><td>097</td><td>POS, bills, invoices &amp; printing</td><td><span class="method post">POST</span></td><td><code>/pos/provisional-bills/{billId}/resume</code></td><td>Store staff/device</td><td>deviceId</td><td>ProvisionalBill</td></tr>
+<tr data-group="Inventory, suppliers, purchasing &amp; reports"><td>098</td><td>Inventory, suppliers, purchasing &amp; reports</td><td><span class="method get">GET</span></td><td><code>/inventory/items</code></td><td>Store staff</td><td>q?, lowStock?, cursor, limit</td><td>Page&lt;InventoryItem&gt;</td></tr>
+<tr data-group="Inventory, suppliers, purchasing &amp; reports"><td>099</td><td>Inventory, suppliers, purchasing &amp; reports</td><td><span class="method get">GET</span></td><td><code>/inventory/movements</code></td><td>Store staff/auditor</td><td>itemId?, from?, to?, cursor, limit</td><td>Page&lt;InventoryMovement&gt;</td></tr>
+<tr data-group="Inventory, suppliers, purchasing &amp; reports"><td>100</td><td>Inventory, suppliers, purchasing &amp; reports</td><td><span class="method post">POST</span></td><td><code>/inventory/movements</code></td><td>Authorized stock operator</td><td>itemId, locationId, movementType, quantity, sourceType, sourceId, reason</td><td>InventoryMovement</td></tr>
+<tr data-group="Inventory, suppliers, purchasing &amp; reports"><td>101</td><td>Inventory, suppliers, purchasing &amp; reports</td><td><span class="method post">POST</span></td><td><code>/inventory/adjustments</code></td><td>Stock manager</td><td>itemId, countedQuantity, reason, expectedVersion</td><td>InventoryAdjustmentResult</td></tr>
+<tr data-group="Inventory, suppliers, purchasing &amp; reports"><td>102</td><td>Inventory, suppliers, purchasing &amp; reports</td><td><span class="method get">GET</span></td><td><code>/suppliers</code></td><td>Store staff</td><td>q?, active?, cursor, limit</td><td>Page&lt;Supplier&gt;</td></tr>
+<tr data-group="Inventory, suppliers, purchasing &amp; reports"><td>103</td><td>Inventory, suppliers, purchasing &amp; reports</td><td><span class="method post">POST</span></td><td><code>/suppliers</code></td><td>Store admin</td><td>name, contactName?, email?, phone?, address?</td><td>Supplier</td></tr>
+<tr data-group="Inventory, suppliers, purchasing &amp; reports"><td>104</td><td>Inventory, suppliers, purchasing &amp; reports</td><td><span class="method patch">PATCH</span></td><td><code>/suppliers/{supplierId}</code></td><td>Store admin</td><td>name?, contactName?, email?, phone?, address?, status?</td><td>Supplier</td></tr>
+<tr data-group="Inventory, suppliers, purchasing &amp; reports"><td>105</td><td>Inventory, suppliers, purchasing &amp; reports</td><td><span class="method get">GET</span></td><td><code>/purchase-orders</code></td><td>Store staff</td><td>status?, supplierId?, cursor, limit</td><td>Page&lt;PurchaseOrder&gt;</td></tr>
+<tr data-group="Inventory, suppliers, purchasing &amp; reports"><td>106</td><td>Inventory, suppliers, purchasing &amp; reports</td><td><span class="method post">POST</span></td><td><code>/purchase-orders</code></td><td>Store staff</td><td>supplierId, storeId, lines[], expectedAt?, notes?</td><td>PurchaseOrder</td></tr>
+<tr data-group="Inventory, suppliers, purchasing &amp; reports"><td>107</td><td>Inventory, suppliers, purchasing &amp; reports</td><td><span class="method post">POST</span></td><td><code>/purchase-orders/{purchaseOrderId}/submit</code></td><td>Purchasing permission</td><td>expectedVersion</td><td>PurchaseOrder</td></tr>
+<tr data-group="Inventory, suppliers, purchasing &amp; reports"><td>108</td><td>Inventory, suppliers, purchasing &amp; reports</td><td><span class="method post">POST</span></td><td><code>/purchase-orders/{purchaseOrderId}/receive</code></td><td>Store staff</td><td>receiptId, lines[{lineId, receivedQuantity}], receivedAt</td><td>PurchaseReceipt</td></tr>
+<tr data-group="Inventory, suppliers, purchasing &amp; reports"><td>109</td><td>Inventory, suppliers, purchasing &amp; reports</td><td><span class="method get">GET</span></td><td><code>/reports/sales</code></td><td>Owner/accounting</td><td>from, to, storeId?, groupBy?</td><td>SalesReport</td></tr>
+<tr data-group="Inventory, suppliers, purchasing &amp; reports"><td>110</td><td>Inventory, suppliers, purchasing &amp; reports</td><td><span class="method get">GET</span></td><td><code>/reports/profit-loss</code></td><td>Owner/accounting</td><td>from, to, storeId?, basis?</td><td>ProfitLossReport</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>111</td><td>SaaS &amp; Web Admin</td><td><span class="method get">GET</span></td><td><code>/admin/overview</code></td><td>Platform admin</td><td>from?, to?</td><td>AdminOverview</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>112</td><td>SaaS &amp; Web Admin</td><td><span class="method get">GET</span></td><td><code>/admin/businesses</code></td><td>Platform admin</td><td>q?, status?, categoryId?, cursor, limit</td><td>Page&lt;TenantSummary&gt;</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>113</td><td>SaaS &amp; Web Admin</td><td><span class="method post">POST</span></td><td><code>/admin/businesses</code></td><td>Platform admin</td><td>name, legalName?, categoryId, owner, planId, timezone, currency</td><td>TenantOnboardingResult</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>114</td><td>SaaS &amp; Web Admin</td><td><span class="method get">GET</span></td><td><code>/admin/business-categories</code></td><td>Platform admin</td><td>active?</td><td>BusinessCategory[]</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>115</td><td>SaaS &amp; Web Admin</td><td><span class="method post">POST</span></td><td><code>/admin/business-categories</code></td><td>Platform admin</td><td>name, slug, description?, status</td><td>BusinessCategory</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>116</td><td>SaaS &amp; Web Admin</td><td><span class="method get">GET</span></td><td><code>/admin/plans</code></td><td>Platform admin</td><td>status?</td><td>SubscriptionPlan[]</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>117</td><td>SaaS &amp; Web Admin</td><td><span class="method post">POST</span></td><td><code>/admin/plans</code></td><td>Platform admin</td><td>name, priceMinor, currency, billingPeriod, entitlements[]</td><td>SubscriptionPlan</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>118</td><td>SaaS &amp; Web Admin</td><td><span class="method patch">PATCH</span></td><td><code>/admin/plans/{planId}</code></td><td>Platform admin</td><td>name?, priceMinor?, status?, entitlements?</td><td>SubscriptionPlan</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>119</td><td>SaaS &amp; Web Admin</td><td><span class="method get">GET</span></td><td><code>/admin/subscriptions</code></td><td>Platform admin/billing admin</td><td>tenantId?, status?, cursor, limit</td><td>Page&lt;Subscription&gt;</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>120</td><td>SaaS &amp; Web Admin</td><td><span class="method post">POST</span></td><td><code>/admin/subscriptions</code></td><td>Platform admin/billing admin</td><td>tenantId, planId, startsAt, trialEndsAt?</td><td>Subscription</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>121</td><td>SaaS &amp; Web Admin</td><td><span class="method patch">PATCH</span></td><td><code>/admin/subscriptions/{subscriptionId}</code></td><td>Platform admin/billing admin</td><td>status?, planId?, endsAt?, reason</td><td>Subscription</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>122</td><td>SaaS &amp; Web Admin</td><td><span class="method get">GET</span></td><td><code>/admin/staff</code></td><td>Platform admin</td><td>tenantId?, cursor, limit</td><td>Page&lt;PlatformStaff&gt;</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>123</td><td>SaaS &amp; Web Admin</td><td><span class="method post">POST</span></td><td><code>/admin/staff</code></td><td>Platform admin</td><td>userId or invitation, platformRoleIds[]</td><td>PlatformStaff</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>124</td><td>SaaS &amp; Web Admin</td><td><span class="method put">PUT</span></td><td><code>/admin/staff/{memberId}/roles</code></td><td>Platform admin</td><td>roleIds[]</td><td>PlatformStaffRoles</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>125</td><td>SaaS &amp; Web Admin</td><td><span class="method get">GET</span></td><td><code>/admin/advertising/campaigns</code></td><td>Platform admin/marketing</td><td>status?, cursor, limit</td><td>Page&lt;AdCampaign&gt;</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>126</td><td>SaaS &amp; Web Admin</td><td><span class="method post">POST</span></td><td><code>/admin/advertising/campaigns</code></td><td>Platform admin/marketing</td><td>name, audience, placement, startsAt, endsAt, budgetMinor?</td><td>AdCampaign</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>127</td><td>SaaS &amp; Web Admin</td><td><span class="method get">GET</span></td><td><code>/admin/messages</code></td><td>Platform support</td><td>status?, cursor, limit</td><td>Page&lt;ContactMessage&gt;</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>128</td><td>SaaS &amp; Web Admin</td><td><span class="method get">GET</span></td><td><code>/admin/cms/pages</code></td><td>Platform content admin</td><td>status?, locale?</td><td>Page&lt;CmsPage&gt;</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>129</td><td>SaaS &amp; Web Admin</td><td><span class="method put">PUT</span></td><td><code>/admin/cms/pages/{pageId}</code></td><td>Platform content admin</td><td>title, slug, locale, content, status, version</td><td>CmsPage</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>130</td><td>SaaS &amp; Web Admin</td><td><span class="method get">GET</span></td><td><code>/admin/settings</code></td><td>Platform admin</td><td>group?</td><td>AdminSettings</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>131</td><td>SaaS &amp; Web Admin</td><td><span class="method patch">PATCH</span></td><td><code>/admin/settings</code></td><td>Platform admin</td><td>settingsPatch, expectedVersion</td><td>AdminSettings</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>132</td><td>SaaS &amp; Web Admin</td><td><span class="method get">GET</span></td><td><code>/admin/audit-logs</code></td><td>Platform auditor</td><td>actorId?, action?, from?, to?, cursor, limit</td><td>Page&lt;AuditEvent&gt;</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>133</td><td>SaaS &amp; Web Admin</td><td><span class="method get">GET</span></td><td><code>/admin/feature-flags</code></td><td>Platform admin</td><td>—</td><td>FeatureFlag[]</td></tr>
+<tr data-group="SaaS &amp; Web Admin"><td>134</td><td>SaaS &amp; Web Admin</td><td><span class="method patch">PATCH</span></td><td><code>/admin/feature-flags/{flagId}</code></td><td>Platform admin</td><td>enabled, rolloutPercent?, reason</td><td>FeatureFlag</td></tr>
+<tr data-group="Offline sync"><td>135</td><td>Offline sync</td><td><span class="method post">POST</span></td><td><code>/sync/push</code></td><td>Authenticated device + tenant membership</td><td>deviceId, batchId, events[]</td><td>SyncPushResult[]: ACK/CONFLICT/REJECTED</td></tr>
+<tr data-group="Offline sync"><td>136</td><td>Offline sync</td><td><span class="method get">GET</span></td><td><code>/sync/pull</code></td><td>Authenticated device + tenant membership</td><td>cursor?, limit, modules[]?</td><td>SyncDelta + nextCursor</td></tr>
+<tr data-group="Offline sync"><td>137</td><td>Offline sync</td><td><span class="method get">GET</span></td><td><code>/sync/operations/{idempotencyKey}</code></td><td>Mutation owner / tenant member</td><td>—</td><td>OperationStatus</td></tr></tbody></table></div><p class="flow-desc">Infrastructure health/OpenAPI, media-upload-intent and optional realtime channels are not included in the business endpoint count.</p></section>
+<section class="page-section" id="json-contracts"><div class="section-heading"><div><h2>03 · JSON contracts</h2><p>Representative examples; final DTO schemas should be published in OpenAPI.</p></div></div><div class="json-grid"><article class="json-card"><div class="json-head"><h3>Checkout quote request</h3><button class="copy" data-copy-target="sample-0">Copy JSON</button></div><p>POST /api/v1/checkout/quote; server recalculates price, stock, discount, tax, fee and serviceability.</p><pre><code id="sample-0">{
+  &quot;storeId&quot;: &quot;str_01J9STORE&quot;,
+  &quot;fulfilmentType&quot;: &quot;DELIVERY&quot;,
+  &quot;addressId&quot;: &quot;adr_01J9HOME&quot;,
+  &quot;items&quot;: [
+    {
+      &quot;productId&quot;: &quot;prd_mango_01&quot;,
+      &quot;quantity&quot;: 2
+    },
+    {
+      &quot;productId&quot;: &quot;prd_milk_01&quot;,
+      &quot;quantity&quot;: 1
+    }
+  ],
+  &quot;couponCode&quot;: &quot;WELCOME10&quot;
+}</code></pre></article>
+<article class="json-card"><div class="json-head"><h3>Checkout quote response</h3><button class="copy" data-copy-target="sample-1">Copy JSON</button></div><p>Quote expires and order creation revalidates it. INR ₹149 = 14900 paise.</p><pre><code id="sample-1">{
+  &quot;data&quot;: {
+    &quot;quoteId&quot;: &quot;qte_01J9XYZ&quot;,
+    &quot;storeId&quot;: &quot;str_01J9STORE&quot;,
+    &quot;currency&quot;: &quot;INR&quot;,
+    &quot;items&quot;: [
+      {
+        &quot;productId&quot;: &quot;prd_mango_01&quot;,
+        &quot;name&quot;: &quot;Alphonso Mango&quot;,
+        &quot;quantity&quot;: 2,
+        &quot;unitPriceMinor&quot;: 14900,
+        &quot;lineTotalMinor&quot;: 29800,
+        &quot;available&quot;: true
+      }
+    ],
+    &quot;subtotalMinor&quot;: 29800,
+    &quot;discountMinor&quot;: 1000,
+    &quot;taxMinor&quot;: 1440,
+    &quot;deliveryFeeMinor&quot;: 2500,
+    &quot;totalMinor&quot;: 32740,
+    &quot;expiresAt&quot;: &quot;2026-10-16T08:45:00Z&quot;
+  },
+  &quot;meta&quot;: {
+    &quot;requestId&quot;: &quot;req_01J9&quot;
+  }
+}</code></pre></article>
+<article class="json-card"><div class="json-head"><h3>Create order request</h3><button class="copy" data-copy-target="sample-2">Copy JSON</button></div><p>POST /api/v1/orders with Idempotency-Key: device-7:order-00042.</p><pre><code id="sample-2">{
+  &quot;quoteId&quot;: &quot;qte_01J9XYZ&quot;,
+  &quot;clientOrderId&quot;: &quot;device-7:order-00042&quot;,
+  &quot;fulfilmentType&quot;: &quot;DELIVERY&quot;,
+  &quot;addressId&quot;: &quot;adr_01J9HOME&quot;,
+  &quot;paymentMethod&quot;: &quot;CASH_ON_DELIVERY&quot;,
+  &quot;customerNote&quot;: &quot;Call on arrival&quot;
+}</code></pre></article>
+<article class="json-card"><div class="json-head"><h3>Create order response</h3><button class="copy" data-copy-target="sample-3">Copy JSON</button></div><p>Return 201 on first create; idempotent replay returns original canonical result.</p><pre><code id="sample-3">{
+  &quot;data&quot;: {
+    &quot;orderId&quot;: &quot;ord_01J9ABC&quot;,
+    &quot;orderNumber&quot;: &quot;VY-104208&quot;,
+    &quot;status&quot;: &quot;PENDING_STORE_ACCEPTANCE&quot;,
+    &quot;paymentStatus&quot;: &quot;COD_DUE&quot;,
+    &quot;fulfilmentType&quot;: &quot;DELIVERY&quot;,
+    &quot;storeId&quot;: &quot;str_01J9STORE&quot;,
+    &quot;total&quot;: {
+      &quot;amountMinor&quot;: 32740,
+      &quot;currency&quot;: &quot;INR&quot;
+    },
+    &quot;version&quot;: 1,
+    &quot;createdAt&quot;: &quot;2026-10-16T08:40:12Z&quot;,
+    &quot;timeline&quot;: [
+      {
+        &quot;status&quot;: &quot;PENDING_STORE_ACCEPTANCE&quot;,
+        &quot;at&quot;: &quot;2026-10-16T08:40:12Z&quot;
+      }
+    ]
+  },
+  &quot;meta&quot;: {
+    &quot;requestId&quot;: &quot;req_01J9&quot;
+  }
+}</code></pre></article>
+<article class="json-card"><div class="json-head"><h3>Store accepts order</h3><button class="copy" data-copy-target="sample-4">Copy JSON</button></div><p>POST /api/v1/merchant/orders/{orderId}/accept; only valid state transition is allowed.</p><pre><code id="sample-4">{
+  &quot;estimatedPrepMinutes&quot;: 15,
+  &quot;note&quot;: &quot;Preparing your order&quot;
+}</code></pre></article>
+<article class="json-card"><div class="json-head"><h3>Driver completes delivery</h3><button class="copy" data-copy-target="sample-5">Copy JSON</button></div><p>POST /api/v1/driver/jobs/{jobId}/complete; server checks assignment, OTP and proof policy.</p><pre><code id="sample-5">{
+  &quot;otp&quot;: &quot;654321&quot;,
+  &quot;proofAssetIds&quot;: [
+    &quot;ast_proof_01&quot;
+  ],
+  &quot;note&quot;: &quot;Handed to recipient&quot;
+}</code></pre></article>
+<article class="json-card"><div class="json-head"><h3>Sync push request</h3><button class="copy" data-copy-target="sample-6">Copy JSON</button></div><p>POST /api/v1/sync/push; every event gets ACK, CONFLICT or REJECTED.</p><pre><code id="sample-6">{
+  &quot;deviceId&quot;: &quot;dev_01J9POS&quot;,
+  &quot;batchId&quot;: &quot;bat_01J9A&quot;,
+  &quot;events&quot;: [
+    {
+      &quot;eventId&quot;: &quot;evt_01J9SALE&quot;,
+      &quot;aggregateType&quot;: &quot;POS_SALE&quot;,
+      &quot;aggregateId&quot;: &quot;client-sale-00087&quot;,
+      &quot;operation&quot;: &quot;CREATE&quot;,
+      &quot;schemaVersion&quot;: 1,
+      &quot;idempotencyKey&quot;: &quot;tenant-9:device-1:client-sale-00087&quot;,
+      &quot;occurredAt&quot;: &quot;2026-10-16T08:44:00Z&quot;,
+      &quot;payload&quot;: {
+        &quot;storeId&quot;: &quot;str_01J9STORE&quot;,
+        &quot;lines&quot;: [
+          {
+            &quot;productId&quot;: &quot;prd_milk_01&quot;,
+            &quot;quantity&quot;: 2
+          }
+        ],
+        &quot;payments&quot;: [
+          {
+            &quot;method&quot;: &quot;CASH&quot;,
+            &quot;amountMinor&quot;: 6800,
+            &quot;currency&quot;: &quot;INR&quot;
+          }
+        ]
+      }
+    }
+  ]
+}</code></pre></article>
+<article class="json-card"><div class="json-head"><h3>Sync push response</h3><button class="copy" data-copy-target="sample-7">Copy JSON</button></div><p>Do not drop rejected/conflicting events; persist actionable diagnostics locally.</p><pre><code id="sample-7">{
+  &quot;data&quot;: {
+    &quot;batchId&quot;: &quot;bat_01J9A&quot;,
+    &quot;results&quot;: [
+      {
+        &quot;eventId&quot;: &quot;evt_01J9SALE&quot;,
+        &quot;outcome&quot;: &quot;ACK&quot;,
+        &quot;serverEntityId&quot;: &quot;sal_01J9SALE&quot;,
+        &quot;serverVersion&quot;: 1,
+        &quot;acknowledgedAt&quot;: &quot;2026-10-16T08:44:03Z&quot;
+      }
+    ]
+  },
+  &quot;meta&quot;: {
+    &quot;nextCursor&quot;: &quot;cur_0015&quot;
+  }
+}</code></pre></article>
+<article class="json-card"><div class="json-head"><h3>Sync delta pull response</h3><button class="copy" data-copy-target="sample-8">Copy JSON</button></div><p>GET /api/v1/sync/pull?cursor=cur_0015&amp;limit=200; cursor is tenant/device/contract scoped.</p><pre><code id="sample-8">{
+  &quot;data&quot;: {
+    &quot;changes&quot;: [
+      {
+        &quot;entityType&quot;: &quot;ORDER&quot;,
+        &quot;entityId&quot;: &quot;ord_01J9ABC&quot;,
+        &quot;operation&quot;: &quot;UPSERT&quot;,
+        &quot;serverVersion&quot;: 4,
+        &quot;changedAt&quot;: &quot;2026-10-16T08:45:00Z&quot;,
+        &quot;payload&quot;: {
+          &quot;status&quot;: &quot;READY_FOR_PICKUP&quot;
+        }
+      }
+    ],
+    &quot;tombstones&quot;: [],
+    &quot;nextCursor&quot;: &quot;cur_0016&quot;,
+    &quot;hasMore&quot;: false
+  }
+}</code></pre></article>
+<article class="json-card"><div class="json-head"><h3>Standard API error</h3><button class="copy" data-copy-target="sample-9">Copy JSON</button></div><p>Use stable error codes and request IDs; do not expose stack traces or secrets.</p><pre><code id="sample-9">{
+  &quot;type&quot;: &quot;https://api.vyavsetu.example/problems/validation&quot;,
+  &quot;title&quot;: &quot;Validation failed&quot;,
+  &quot;status&quot;: 422,
+  &quot;code&quot;: &quot;ORDER_ITEM_UNAVAILABLE&quot;,
+  &quot;detail&quot;: &quot;One item is no longer available.&quot;,
+  &quot;requestId&quot;: &quot;req_01J9&quot;,
+  &quot;fieldErrors&quot;: [
+    {
+      &quot;field&quot;: &quot;items[0].productId&quot;,
+      &quot;code&quot;: &quot;OUT_OF_STOCK&quot;,
+      &quot;message&quot;: &quot;Please remove or reduce this item.&quot;
+    }
+  ]
+}</code></pre></article></div></section>
+<section class="page-section" id="browser-storage"><div class="section-heading"><div><h2>04 · Current browser localStorage inventory</h2><p>36 existing keys; this task only documents them.</p></div></div><div class="warning-note"><strong>Important:</strong> localStorage is key/value storage, not a relational table. Never store password, OTP, access/refresh tokens or card PAN/CVV here. PostgreSQL is server source of truth; Drift/SQLite is structured local data for Flutter.</div><div class="doc-table-wrap"><table class="data-table"><thead><tr><th>Area</th><th>Current key</th><th>Purpose</th></tr></thead><tbody><tr><td>Workspace</td><td><code>vyavsetu_pos_products</code></td><td>Demo POS product catalogue</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_market_products</code></td><td>Demo marketplace product catalogue</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_pos_cart</code></td><td>POS cart</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_market_cart</code></td><td>Marketplace cart</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_market_shop</code></td><td>Selected demo marketplace store</td></tr>
+<tr><td>Shared orders</td><td><code>vyavsetu_demo_orders</code></td><td>Shared demo order array</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_current_receipt</code></td><td>Most recent demo receipt</td></tr>
+<tr><td>Shared delivery</td><td><code>vyavsetu_delivery_statuses</code></td><td>Order ID to demo delivery status</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_kitchen_tickets</code></td><td>Demo restaurant/KDS tickets</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_driver_online</code></td><td>Demo driver availability flag</td></tr>
+<tr><td>Shared delivery</td><td><code>vyavsetu_driver_jobs</code></td><td>Demo driver jobs</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_inventory_items</code></td><td>Demo inventory balances</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_tenants</code></td><td>Demo tenant records</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_suppliers</code></td><td>Demo supplier records</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_purchase_orders</code></td><td>Demo purchase orders</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_customers</code></td><td>Demo customer CRM records</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_returns</code></td><td>Demo return/refund requests</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_staff</code></td><td>Demo staff records</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_plans</code></td><td>Demo SaaS plans</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_support_tickets</code></td><td>Demo support tickets</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_feature_flags</code></td><td>Browser-local feature flags</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_business_settings</code></td><td>Demo business settings</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_stock_history</code></td><td>Demo stock movement history</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_admin_audit</code></td><td>Demo audit entries</td></tr>
+<tr><td>Workspace</td><td><code>vyavsetu_subscription_history</code></td><td>Demo subscription changes</td></tr>
+<tr><td>Preferences</td><td><code>vyavsetu_theme</code></td><td>Selected theme preference</td></tr>
+<tr><td>Customer profile</td><td><code>vyavsetu_customer_name</code></td><td>Demo checkout name</td></tr>
+<tr><td>Customer profile</td><td><code>vyavsetu_customer_phone</code></td><td>Demo checkout phone</td></tr>
+<tr><td>Customer profile</td><td><code>vyavsetu_customer_address</code></td><td>Demo checkout address</td></tr>
+<tr><td>Customer App</td><td><code>vyavsetu-customer-prototype-cart</code></td><td>Standalone Customer App cart snapshot</td></tr>
+<tr><td>Customer App</td><td><code>vyavsetu-customer-prototype-orders</code></td><td>Standalone Customer App order-history copy/cache</td></tr>
+<tr><td>Store App legacy</td><td><code>vyavsetu-store-demo-orders</code></td><td>Standalone Store App legacy sample queue</td></tr>
+<tr><td>Store App legacy</td><td><code>vyavsetu-store-demo-products</code></td><td>Standalone Store App sample product list</td></tr>
+<tr><td>Driver App</td><td><code>vyavsetu-driver-demo-task</code></td><td>Standalone Driver selected task</td></tr>
+<tr><td>Driver App</td><td><code>vyavsetu-driver-demo-completed</code></td><td>Standalone Driver sample completed trips counter</td></tr>
+<tr><td>Driver App</td><td><code>vyavsetu-driver-demo-extra</code></td><td>Standalone Driver sample extra earnings counter</td></tr></tbody></table></div></section>
+<section class="page-section" id="local-db"><div class="section-heading"><div><h2>05 · Proposed Drift / SQLite tables</h2><p>30 proposed local tables; each app should use only the subset it needs.</p></div></div><div class="doc-table-wrap"><table class="data-table"><thead><tr><th>#</th><th>Table</th><th>Key fields</th><th>Rule/purpose</th></tr></thead><tbody><tr><td>1</td><td><code>local_stores</code></td><td>store_id PK, tenant_id, name, type, status, timezone, currency, address_json, server_version, updated_at</td><td>Store/profile cache.</td></tr>
+<tr><td>2</td><td><code>local_store_hours</code></td><td>store_id + weekday PK, open_at, close_at, closed, server_version</td><td>Hours display; server revalidates checkout.</td></tr>
+<tr><td>3</td><td><code>local_categories</code></td><td>category_id PK, parent_id, name, sort_order, server_version</td><td>Category browser cache.</td></tr>
+<tr><td>4</td><td><code>local_products</code></td><td>product_id PK, name, sku, unit, category_id, image_asset_id, archived, server_version</td><td>Fast product-list render.</td></tr>
+<tr><td>5</td><td><code>local_store_products</code></td><td>store_id + product_id PK, price_minor, currency, availability, stock_snapshot, stock_version, server_version</td><td>Assortment cache only; not final price/stock authority.</td></tr>
+<tr><td>6</td><td><code>local_customer_profile</code></td><td>profile_id PK, display_name, masked_contact_json, updated_at</td><td>Minimal profile; avoid unnecessary PII.</td></tr>
+<tr><td>7</td><td><code>local_addresses</code></td><td>address_id PK, label, recipient, encrypted_address_json, lat?, lng?, is_default, sync_state</td><td>Encrypt sensitive fields where supported; clear per retention policy.</td></tr>
+<tr><td>8</td><td><code>local_cart</code></td><td>cart_id PK, user_id?, store_id, currency, updated_at, sync_state</td><td>Cart header; one-store-per-order until multi-store fulfilment is designed.</td></tr>
+<tr><td>9</td><td><code>local_cart_items</code></td><td>cart_id + product_id PK, quantity, product_snapshot_json, updated_at</td><td>Local edits persist immediately.</td></tr>
+<tr><td>10</td><td><code>local_orders</code></td><td>order_id PK, tenant_id?, store_id, customer_id?, status, payment_state, delivery_state, total_minor, currency, server_version, created_at, updated_at, sync_state</td><td>Local view reconciles to server version.</td></tr>
+<tr><td>11</td><td><code>local_order_items</code></td><td>order_id + line_id PK, product_id, name_snapshot, quantity, unit_price_minor, tax_snapshot_json</td><td>Immutable historical line snapshots.</td></tr>
+<tr><td>12</td><td><code>local_order_events</code></td><td>event_id PK, order_id, state, actor_id, occurred_at, server_version, payload_json</td><td>Append-only cached order timeline.</td></tr>
+<tr><td>13</td><td><code>local_payment_attempts</code></td><td>attempt_id PK, order_id/sale_id, method, amount_minor, currency, state, provider_ref?, idempotency_key, created_at</td><td>Never persist card PAN/CVV or provider secrets.</td></tr>
+<tr><td>14</td><td><code>local_pos_sales</code></td><td>client_sale_id PK, store_id, cashier_id, status, subtotal_minor, tax_minor, total_minor, currency, occurred_at, server_sale_id?, sync_state</td><td>Offline POS sale identity.</td></tr>
+<tr><td>15</td><td><code>local_pos_sale_items</code></td><td>client_sale_id + line_id PK, product_id, sku_snapshot, quantity, unit_price_minor, tax_snapshot_json</td><td>Sale-time product/price snapshot.</td></tr>
+<tr><td>16</td><td><code>local_provisional_bills</code></td><td>client_bill_id PK, store_id, customer_id?, lines_json, note?, revision, updated_at, sync_state</td><td>Editable draft, not a statutory invoice.</td></tr>
+<tr><td>17</td><td><code>local_inventory_balance_cache</code></td><td>store_id + item_id PK, quantity_snapshot, reorder_level?, server_version, pulled_at</td><td>Cache only; canonical stock is server ledger.</td></tr>
+<tr><td>18</td><td><code>local_inventory_movements</code></td><td>client_movement_id PK, store_id, item_id, type, quantity, reason, source_id?, occurred_at, sync_state</td><td>Local operation intent until server acknowledgement.</td></tr>
+<tr><td>19</td><td><code>local_suppliers</code></td><td>supplier_id PK, name, contact_snapshot_json, server_version</td><td>Supplier cache.</td></tr>
+<tr><td>20</td><td><code>local_purchase_orders</code></td><td>purchase_order_id/client_id PK, supplier_id, status, total_minor, currency, server_version, sync_state</td><td>Offline drafts; server checks conflicts.</td></tr>
+<tr><td>21</td><td><code>local_purchase_order_lines</code></td><td>purchase_order_id + line_id PK, product_id, ordered_qty, received_qty, unit_cost_minor, name_snapshot</td><td>Line-level receiving state.</td></tr>
+<tr><td>22</td><td><code>local_kitchen_tickets</code></td><td>ticket_id PK, order_id?, status, items_snapshot_json, due_at?, server_version, sync_state</td><td>KDS cache; state conflicts need resolution.</td></tr>
+<tr><td>23</td><td><code>local_driver_jobs</code></td><td>job_id PK, order_id, driver_id, status, pickup_at?, started_at?, delivered_at?, server_version, sync_state</td><td>Only assigned driver can mutate.</td></tr>
+<tr><td>24</td><td><code>local_driver_location_queue</code></td><td>point_id PK, job_id, lat, lng, accuracy_m?, captured_at, upload_state</td><td>Throttle + retention; prune acknowledged points.</td></tr>
+<tr><td>25</td><td><code>local_notifications</code></td><td>notification_id PK, title, body, read_at?, created_at, server_version</td><td>Notification inbox cache.</td></tr>
+<tr><td>26</td><td><code>local_outbox</code></td><td>event_id PK, tenant_id, device_id, aggregate_type, aggregate_id, operation, payload_json, schema_version, idempotency_key, occurred_at, attempts, next_attempt_at?, state, last_error_code?</td><td>Entity write + outbox event commit in one local transaction.</td></tr>
+<tr><td>27</td><td><code>local_sync_cursors</code></td><td>module_name PK, cursor, last_success_at, server_version</td><td>One cursor per module and sync scope.</td></tr>
+<tr><td>28</td><td><code>local_sync_conflicts</code></td><td>conflict_id PK, event_id, aggregate_type, aggregate_id, server_snapshot_json, local_snapshot_json, resolution_state, created_at</td><td>Preserve both snapshots until explicit resolution.</td></tr>
+<tr><td>29</td><td><code>local_media_upload_queue</code></td><td>media_id PK, local_path, mime_type, size_bytes, checksum, target_type, target_id?, upload_state, attempts</td><td>Queue proof/chat/product media upload.</td></tr>
+<tr><td>30</td><td><code>local_print_jobs</code></td><td>print_job_id PK, sale_id/invoice_id, printer_profile_json, format, copies, state, attempts, last_error?, created_at</td><td>Printing state is separate from sale success.</td></tr></tbody></table></div></section>
+<section class="page-section" id="server-db"><div class="section-heading"><div><h2>06 · Proposed PostgreSQL model</h2><p>Server-owned data, tenant boundaries and constraints.</p></div></div><div class="doc-table-wrap"><table class="data-table"><thead><tr><th>Module</th><th>Tables / aggregates</th><th>Critical constraint</th></tr></thead><tbody><tr><td><strong>Identity</strong></td><td>users, auth_identities, refresh_sessions, otp_challenges</td><td>Normalized identifiers unique; tokens stored hashed; OTPs expire.</td></tr>
+<tr><td><strong>Tenant/RBAC</strong></td><td>tenants, tenant_memberships, roles, permissions, role_permissions, membership_roles</td><td>Unique tenant+user membership; platform roles separate from tenant roles.</td></tr>
+<tr><td><strong>Stores</strong></td><td>stores, store_hours</td><td>Each store belongs to a tenant; hours use store timezone.</td></tr>
+<tr><td><strong>Customer/driver</strong></td><td>customer_profiles, customer_addresses, driver_profiles, driver_availability, device_registrations</td><td>PII and driver location restricted and retained by policy.</td></tr>
+<tr><td><strong>Catalogue</strong></td><td>business_categories, categories, products, product_images, store_products</td><td>Unique SKU per agreed scope; price in minor units; soft-delete referenced products.</td></tr>
+<tr><td><strong>Promotions</strong></td><td>coupons, coupon_redemptions</td><td>Eligibility and usage limits enforced transactionally.</td></tr>
+<tr><td><strong>Commerce</strong></td><td>carts, cart_items, orders, order_items, order_status_events</td><td>Order lines have immutable name/price/tax snapshots; order events append-only.</td></tr>
+<tr><td><strong>Payments</strong></td><td>payments, payment_events, payment_methods, refunds</td><td>Unique provider event ID; gateway token refs only, no PAN/CVV.</td></tr>
+<tr><td><strong>Delivery</strong></td><td>delivery_jobs, delivery_events, driver_location_points, delivery_proofs</td><td>Active-job policy, driver assignment checks and location retention.</td></tr>
+<tr><td><strong>Messaging</strong></td><td>chat_conversations, chat_messages, message_attachments, safety_reports, user_blocks</td><td>Participant-only access, client message idempotency and moderation.</td></tr>
+<tr><td><strong>POS/Billing</strong></td><td>pos_sales, pos_sale_items, provisional_bills, invoices, invoice_lines, print_jobs</td><td>Client sale ID unique by tenant/device; invoices immutable; print failure doesn't undo sale.</td></tr>
+<tr><td><strong>Inventory/Buying</strong></td><td>inventory_items, inventory_movements, suppliers, purchase_orders, purchase_order_lines, purchase_receipts</td><td>Append-only stock ledger; receiving and movement atomic.</td></tr>
+<tr><td><strong>Restaurant</strong></td><td>kitchen_tickets, kitchen_ticket_lines</td><td>State transitions check current version.</td></tr>
+<tr><td><strong>SaaS billing</strong></td><td>plans, plan_entitlements, subscriptions, subscription_events, store_payouts</td><td>Snapshot plan/price at subscription start; audit lifecycle.</td></tr>
+<tr><td><strong>Website/admin</strong></td><td>ad_campaigns, contact_messages, cms_pages, system_settings, feature_flags</td><td>Sanitize CMS HTML; settings responses never contain secrets.</td></tr>
+<tr><td><strong>Reliability</strong></td><td>notifications, audit_logs, idempotency_records, outbox_events, sync_cursors</td><td>Audit append-only; idempotency uniqueness; outbox retries tracked.</td></tr></tbody></table></div></section>
+<section class="page-section" id="java-blueprint"><div class="section-heading"><div><h2>07 · Java Spring Boot package design</h2><p>One deployable modular monolith. Keep module API, application, domain and infrastructure explicit.</p></div></div><pre class="arch"><code>com.vyavsetu
+├── VyavsetuApplication.java
+├── common/{api,security,tracing,money,idempotency,outbox}
+├── identity/{api,application,domain,infrastructure}
+├── tenancy/{api,application,domain,infrastructure}
+├── customer/      catalog/       pricing/
+├── orders/        payments/      merchant/
+├── delivery/      chat/          pos/
+├── invoicing/     inventory/     purchasing/
+├── restaurant/    reporting/     subscriptions/
+├── admin/         notifications/ sync/
+└── audit/</code></pre>
+<div class="module-grid"><div class="module-card"><b>API</b><p>Thin controllers, Java record DTOs, Bean Validation, response codes and OpenAPI.</p></div><div class="module-card"><b>Application</b><p>Use cases: CreateOrder, AcceptMerchantOrder, CompleteDelivery, ReceivePurchaseOrder.</p></div><div class="module-card"><b>Domain</b><p>Aggregates, state enums, Money value object and domain invariants.</p></div><div class="module-card"><b>Infrastructure</b><p>JPA repositories, Flyway migrations, provider adapters, outbox workers.</p></div><div class="module-card"><b>Transactions</b><p>Commit order/payment/stock/outbox atomically where required; don't hold transactions during gateway calls.</p></div><div class="module-card"><b>Security</b><p>CurrentActor + TenantContext, object-level permission guard, membership and audit.</p></div></div>
+<h3>Example request DTO</h3><pre class="arch"><code>package com.vyavsetu.orders.api;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import java.util.UUID;
+
+public record CreateOrderRequest(
+    @NotBlank String quoteId,
+    @NotBlank String clientOrderId,
+    @NotNull UUID storeId,
+    @NotBlank String fulfilmentType,
+    UUID addressId,
+    @NotBlank String paymentMethod,
+    String customerNote
+) {}</code></pre>
+</section>
+<section class="page-section" id="safety"><div class="section-heading"><div><h2>08 · Reliability, privacy & rollout</h2><p>Start with a narrow vertical slice, not a 137-endpoint implementation dump.</p></div></div><div class="cards-grid"><article class="panel"><h3>Tenant isolation</h3><p>Every tenant-owned query is scoped by authenticated membership and resource permission. UUID is not an authorization check.</p></article><article class="panel"><h3>Idempotency</h3><p>Same key + same body replays result; same key + different body returns 409.</p></article><article class="panel"><h3>Offline truth</h3><p>Persist entity + outbox atomically. First render doesn't wait for sync. ACK/conflict/rejection stay distinct.</p></article><article class="panel"><h3>Payment safety</h3><p>Verify provider webhooks and reconcile timeouts. Never infer paid from client callback.</p></article><article class="panel"><h3>Immutable audit</h3><p>Append order timeline, payment events, stock movements, invoice issuance and admin changes.</p></article><article class="panel"><h3>Privacy</h3><p>No tokens/OTP/card data in localStorage or logs; restrict driver location and media access.</p></article></div>
+<ol><li><strong>Foundation:</strong> auth/session, tenant/RBAC, Flyway, request IDs, idempotency and OpenAPI.</li><li><strong>Marketplace slice:</strong> catalogue → quote/order → store accept/ready → driver delivery → customer timeline.</li><li><strong>Payments/chat:</strong> sandbox, webhook/reconciliation, payment tokenization, messages and safety.</li><li><strong>Offline POS:</strong> Drift migrations, provisional bills, sales, invoices, print jobs and sync conflict UI.</li><li><strong>Inventory/admin:</strong> receiving, reports, plans/subscriptions, CMS, roles, settings and audit.</li><li><strong>Hardening:</strong> tenant/concurrency/offline tests, webhook replay, backup/restore and rollback.</li></ol></section>
+<section class="page-section"><div class="callout warning"><strong>Scope protection:</strong> docs only. Existing app screens, logic and current localStorage keys have not been changed by this API architecture doc.</div><div class="source-links"><a href="API_ARCHITECTURE.md">Read complete Markdown source ↗</a><a href="developer-handoff.html">Back to developer handoff ↗</a></div></section>
+<footer class="doc-footer"><span>Vyavsetu · API architecture v1 proposal</span><span><a href="index.html">Developer portal</a> · <a href="../">Interactive demo</a> · <a href="https://github.com/manjesh2024/vyavsetu">GitHub</a></span></footer>
+</main></div>
+<script>
+(function(){
+ const search=document.getElementById('apiSearch');
+ const group=document.getElementById('apiGroup');
+ const method=document.getElementById('apiMethod');
+ const tbody=document.getElementById('endpointRows');
+ const count=document.getElementById('apiCount');
+ function filter(){
+   const q=search.value.toLowerCase().trim(),g=group.value,m=method.value;
+   let shown=0;
+   tbody.querySelectorAll('tr').forEach(tr=>{
+     const methodCell=tr.querySelector('.method').textContent;
+     const matches=(!q||tr.textContent.toLowerCase().includes(q))&&(!g||tr.dataset.group===g)&&(!m||methodCell===m);
+     tr.hidden=!matches;if(matches)shown++;
+   });
+   count.textContent='Showing '+shown+' of 137 operations';
+ }
+ [search,group,method].forEach(el=>el.addEventListener('input',filter));
+ document.querySelectorAll('[data-copy-target]').forEach(button=>button.addEventListener('click',async()=>{
+   const code=document.getElementById(button.dataset.copyTarget);
+   try{await navigator.clipboard.writeText(code.textContent);button.textContent='Copied'}
+   catch(e){button.textContent='Select JSON';const range=document.createRange();range.selectNodeContents(code);const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range)}
+   setTimeout(()=>button.textContent='Copy JSON',1200);
+ }));
+})();
+</script></body></html>
