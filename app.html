@@ -112,7 +112,7 @@
   .print-thermal{margin:0!important;page-break-after:avoid;break-after:avoid}
   .invoice-ribbon,.invoice-meta,.invoice-panel-title,.invoice-table th,.summary-row.total,.platform-strip{print-color-adjust:exact;-webkit-print-color-adjust:exact}
 }
-</style>
+.preview-select{max-width:178px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);padding:8px 10px;font:inherit;font-size:11px;font-weight:700;min-width:0}.top-actions{max-width:100%}@media(max-width:620px){.preview-select{flex:1 1 44%;max-width:none;padding:8px 7px}.top-actions{width:100%}.top-actions .pill{display:inline-flex!important}}</style>
 </head>
 <body>
 <div class="layout">
@@ -146,7 +146,7 @@
 <div class="side-bottom"><b>Demo workspace</b>Sample data only<br><span style="color:var(--muted)">No live payments or server sync.</span></div>
 </aside>
 <main>
-<div class="top"><div class="crumb">Workspace / <strong id="crumbPage">Overview</strong></div><div class="top-actions"><span class="pill">● Demo environment</span><select class="pill" id="localTheme" aria-label="Theme"><option value="light">Light theme</option><option value="dark">Dark theme</option><option value="ocean">Ocean theme</option><option value="forest">Forest theme</option><option value="contrast">High contrast</option></select><div class="profile"><div class="avatar">V</div><span>Vyavsetu Demo</span></div></div></div>
+<div class="top"><div class="crumb">Workspace / <strong id="crumbPage">Overview</strong></div><div class="top-actions"><select class="preview-select" id="localTheme" aria-label="Colour theme"><option value="light">Theme · Light</option><option value="dark">Theme · Dark</option><option value="ocean">Theme · Ocean</option><option value="forest">Theme · Forest</option><option value="contrast">Theme · High contrast</option></select><select class="preview-select" id="localDevice" aria-label="Responsive device preview"><option value="auto">Viewport · Auto</option><option value="desktop">Desktop · 1440</option><option value="laptop">Laptop · 1280</option><option value="store">Store POS · 1024</option><option value="tablet">Tablet / iPad · 820</option><option value="android">Android · 412</option><option value="iphone">iPhone · 390</option></select><span class="pill">● Demo environment</span><div class="profile"><div class="avatar">V</div><span>Vyavsetu Demo</span></div></div></div>
 <div id="content"></div>
 </main>
 </div>
@@ -471,7 +471,8 @@ if(b.matches('[data-view-order]')){viewOrder(b.dataset.viewOrder);return}
 if(b.matches('[data-resume-bill]')){resumeBill(b.dataset.resumeBill);return}
 if(b.matches('[data-print-format]')){printDemoReceipt(b.dataset.printFormat);return}if(b.matches('[data-action="print-receipt"]')){printDemoReceipt('a4');return}
 });document.getElementById('localTheme').value=localStorage.getItem('vyavsetu_theme')||'light';document.getElementById('localTheme').addEventListener('change',e=>{document.documentElement.dataset.theme=e.target.value;localStorage.setItem('vyavsetu_theme',e.target.value);parent.postMessage({type:'vyavsetu-theme',theme:e.target.value},'*')});
-window.addEventListener('message',e=>{if(e.data?.type==='vyavsetu-theme'){document.documentElement.dataset.theme=e.data.theme;document.getElementById('localTheme').value=e.data.theme}});
+document.getElementById('localDevice').addEventListener('change',e=>parent.postMessage({type:'vyavsetu-device',device:e.target.value},'*'));
+window.addEventListener('message',e=>{if(e.data?.type==='vyavsetu-theme'){document.documentElement.dataset.theme=e.data.theme;document.getElementById('localTheme').value=e.data.theme}if(e.data?.type==='vyavsetu-device'&&document.getElementById('localDevice'))document.getElementById('localDevice').value=e.data.device});
 render();
 </script>
 </body></html>
