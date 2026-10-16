@@ -126,7 +126,25 @@
   .print-thermal{margin:0!important;page-break-after:avoid;break-after:avoid}
   .invoice-ribbon,.invoice-meta,.invoice-panel-title,.invoice-table th,.summary-row.total,.platform-strip{print-color-adjust:exact;-webkit-print-color-adjust:exact}
 }
-.preview-select{max-width:178px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);padding:8px 10px;font:inherit;font-size:11px;font-weight:700;min-width:0}.top-actions{max-width:100%}@media(max-width:620px){.preview-select{flex:1 1 44%;max-width:none;padding:8px 7px}.top-actions{width:100%}.top-actions .pill{display:inline-flex!important}}</style>
+.preview-select{max-width:178px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);padding:8px 10px;font:inherit;font-size:11px;font-weight:700;min-width:0}.top-actions{max-width:100%}@media(max-width:620px){.preview-select{flex:1 1 44%;max-width:none;padding:8px 7px}.top-actions{width:100%}.top-actions .pill{display:inline-flex!important}}
+/* Small-screen listing rules shared across the existing Vyavsetu workspace modules. */
+.product-grid,.shop-grid,.ticket-grid,.delivery-grid,.flow-grid,.dev-doc-grid,.app-launch-grid{width:100%;min-width:0}
+.product-grid .product,.shop-tile,.ticket-card,.delivery-card,.order-row,.dev-doc-card,.app-launch-card{min-width:0;max-width:100%}
+.product-grid .product,.ticket-card,.delivery-card{overflow-wrap:anywhere}
+.product-grid .product .btn,.shop-tile .tag{max-width:100%}
+.order-row>div:first-child{min-width:0;overflow-wrap:anywhere}
+@media(max-width:620px){
+ .product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .shop-grid{grid-template-columns:minmax(0,1fr)}
+ .ticket-grid,.delivery-grid,.flow-grid,.dev-doc-grid,.app-launch-grid{grid-template-columns:minmax(0,1fr)}
+ .order-row{align-items:flex-start;gap:8px}
+ .order-row>div:last-child{flex:0 0 auto;max-width:38%}
+ .order-row .btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+ .shop-tile{width:100%;gap:8px}
+ .shop-tile .tag{margin-left:auto;white-space:nowrap}
+ .ticket-card,.delivery-card{padding:11px}
+}
+</style>
 </head>
 <body>
 <div class="layout">
