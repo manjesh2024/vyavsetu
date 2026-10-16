@@ -1,7 +1,7 @@
 # Vyavsetu Demo Verification
 
 ## Automated checks
-GitHub Actions runs JavaScript/feature-hook validation and a Chromium end-to-end test against the local static demo. Latest successful browser E2E run: https://github.com/manjesh2024/vyavsetu/actions/runs/38851123385. Latest successful Pages deploy: https://github.com/manjesh2024/vyavsetu/actions/runs/38851123344. Latest source commit covered by those runs: `22517fe04a101ec073af7efcb0b52c6ddc007657`.
+GitHub Actions runs JavaScript/feature-hook validation and a Chromium end-to-end test against the local static demo. Latest successful browser E2E run: https://github.com/manjesh2024/vyavsetu/actions/runs/38851255059. Latest successful Pages deploy: https://github.com/manjesh2024/vyavsetu/actions/runs/38851255197. Latest source commit covered by those runs: `104f0c684214e39320ac2cd72b221f71a3cfc2cf`.
 
 ## Interactions covered by the prototype
 - POS: product add/quantity controls, stock guard, illustrative total calculation, Cash/Dummy UPI/Dummy Card, provisional bill save/resume, clear cart.
