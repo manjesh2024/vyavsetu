@@ -23,7 +23,10 @@ This portal includes visual pages for architecture and business flowcharts, the 
 
 - [Visual architecture & flowcharts](docs/architecture-flowcharts.html)
 - [API architecture & Java blueprint — HTML view](docs/api-architecture.html)
-- [API architecture & Java blueprint — Markdown source](docs/API_ARCHITECTURE.md)\n- [Configuration Studio — interactive isolated sandbox](studio/index.html)\n- [Configuration Studio — visual developer blueprint](docs/configuration-studio.html)\n- [Configuration Studio — full product/engineering spec](docs/CONFIGURATION_STUDIO_BLUEPRINT.md)
+- [API architecture & Java blueprint — Markdown source](docs/API_ARCHITECTURE.md)
+- [Configuration Studio — interactive isolated sandbox](studio/index.html)
+- [Configuration Studio — visual developer blueprint](docs/configuration-studio.html)
+- [Configuration Studio — full product/engineering spec](docs/CONFIGURATION_STUDIO_BLUEPRINT.md)
 - [Visual developer handoff](docs/developer-handoff.html)
 - [Visual brand guidelines](docs/brand-guidelines.html)
 - [Visual responsive/device matrix](docs/responsive-device-matrix.html)
