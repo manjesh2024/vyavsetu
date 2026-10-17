@@ -19,11 +19,14 @@ Open `index.html` locally, or enable GitHub Pages in **Settings → Pages → Bu
 
 **[Open the branded HTML Developer Documentation Portal](docs/index.html)**
 
-This portal includes visual pages for architecture and business flowcharts, developer handoff, brand guidelines, responsive/device QA, test verification and Hinglish quick start. Each HTML page links to its source Markdown so the source documents remain editable in the repository.
+This portal includes visual pages for architecture and business flowcharts, the Configuration Studio product blueprint, developer handoff, brand guidelines, responsive/device QA, test verification and Hinglish quick start. Each HTML page links to its source Markdown so the source documents remain editable in the repository.
 
 - [Visual architecture & flowcharts](docs/architecture-flowcharts.html)
 - [API architecture & Java blueprint — HTML view](docs/api-architecture.html)
 - [API architecture & Java blueprint — Markdown source](docs/API_ARCHITECTURE.md)
+- [Configuration Studio — interactive isolated sandbox](studio/index.html)
+- [Configuration Studio — visual developer blueprint](docs/configuration-studio.html)
+- [Configuration Studio — full product/engineering spec](docs/CONFIGURATION_STUDIO_BLUEPRINT.md)
 - [Visual developer handoff](docs/developer-handoff.html)
 - [Visual brand guidelines](docs/brand-guidelines.html)
 - [Visual responsive/device matrix](docs/responsive-device-matrix.html)
