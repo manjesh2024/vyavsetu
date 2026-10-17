@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Configuration Studio · Vyavsetu Developer Docs</title>
+<meta name="description" content="Visual product blueprint for the isolated Vyavsetu Configuration Studio and future production implementation.">
+<link rel="stylesheet" href="docs.css"><script defer src="docs.js"></script>
+<style>
+.studio-callout{padding:15px 17px;border:1px solid #efd6a0;background:#fff7e4;color:#76531a;border-radius:14px;margin:18px 0;font-size:13px}.studio-callout strong{display:block;margin-bottom:4px}.studio-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:stretch;margin:18px 0}.flow-step{background:var(--doc-surface,var(--surface));border:1px solid var(--line,#dfe7ed);border-radius:13px;padding:15px;min-width:0}.flow-step .num{height:27px;width:27px;display:grid;place-items:center;background:#e8f8f0;color:#078253;border-radius:8px;font-weight:900;margin-bottom:11px}.flow-step h3{font-size:13px;margin:0 0 6px}.flow-step p{font-size:11px;color:var(--muted);margin:0}.surface-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.surface-card{border:1px solid var(--line);border-radius:13px;padding:15px;background:var(--surface);min-width:0}.surface-card .emoji{font-size:22px}.surface-card h3{font-size:13px;margin:8px 0 4px}.surface-card p{font-size:11px;color:var(--muted);margin:0}.boundary-table{width:100%;border-collapse:collapse;font-size:12px}.boundary-table td,.boundary-table th{text-align:left;padding:11px 9px;border-bottom:1px solid var(--line);vertical-align:top}.boundary-table th{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}.tagline{font-size:10px;font-weight:900;letter-spacing:.09em;color:#087b51;background:#e7f7ef;border-radius:999px;padding:6px 9px;display:inline-block}.stage{display:grid;grid-template-columns:44px 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.stage:last-child{border-bottom:0}.stage-num{width:36px;height:36px;border-radius:10px;background:#eef5f8;display:grid;place-items:center;font-weight:900;color:#0f2d4a}.stage h3{font-size:13px;margin:0 0 4px}.stage p{font-size:11px;color:var(--muted);margin:0}.studio-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.studio-actions a{display:inline-flex;padding:10px 13px;border-radius:9px;font-size:12px;font-weight:800;border:1px solid var(--line)}.studio-actions a.primary{background:#0f2d4a;border-color:#0f2d4a;color:white}.inlinecode{font-family:ui-monospace,Menlo,monospace;background:var(--surface-secondary,#f1f5f8);padding:2px 5px;border-radius:5px;font-size:.93em}
+@media(max-width:900px){.studio-flow{grid-template-columns:repeat(2,minmax(0,1fr))}.surface-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.studio-flow,.surface-grid{grid-template-columns:1fr}.boundary-table{font-size:11px}.boundary-table td,.boundary-table th{padding:8px 5px}}
+</style>
+</head>
+<body data-doc-page="configuration">
+<header class="doc-top"><a class="doc-brand" href="index.html"><img data-brand-logo data-light="../assets/vyavsetu-horizontal.svg" data-dark="../assets/vyavsetu-horizontal-dark.svg" src="../assets/vyavsetu-horizontal.svg" alt="Vyavsetu"><span>DEVELOPER DOCUMENTATION</span></a><div class="doc-actions"><button class="doc-button" data-theme-toggle>Theme · Light</button><a class="doc-button" href="../studio/">Open Studio sandbox ↗</a></div></header>
+<div class="doc-layout">
+<nav class="doc-side" aria-label="Documentation navigation"><div class="side-caption">Developer portal</div>
+<a href="index.html"><i class="side-dot"></i> Documentation home</a><a href="architecture-flowcharts.html"><i class="side-dot"></i> Architecture & flows</a><a href="api-architecture.html"><i class="side-dot"></i> API + Java blueprint</a><a href="configuration-studio.html"><i class="side-dot"></i> Configuration Studio</a><a href="developer-handoff.html"><i class="side-dot"></i> Developer handoff</a><a href="brand-guidelines.html"><i class="side-dot"></i> Brand guidelines</a><a href="responsive-device-matrix.html"><i class="side-dot"></i> Responsive & QA</a><a href="test-report.html"><i class="side-dot"></i> Test report</a><a href="quick-start-hinglish.html"><i class="side-dot"></i> Quick start · Hinglish</a>
+<div class="side-note"><strong>Safety boundary</strong><br>Studio draft state is isolated. It cannot alter the current demo apps or publish runtime configuration.</div></nav>
+<main class="doc-main"><div class="breadcrumbs">Vyavsetu / Product blueprint / Configuration Studio</div>
+<section class="doc-hero"><div class="eyebrow">Admin-powered customization</div><h1>Vyavsetu Configuration Studio</h1><p>A controlled product builder for layouts, design tokens, dynamic forms, categories and module visibility — designed so each change targets the correct app, tenant and store.</p><div class="hero-pills"><span class="pill">Separate sandbox prototype</span><span class="pill">Flutter runtime target</span><span class="pill">Spring Boot config module</span><span class="pill">Versioned PostgreSQL snapshots</span></div><div class="studio-actions"><a class="primary" href="../studio/">Try isolated Studio ↗</a><a href="CONFIGURATION_STUDIO_BLUEPRINT.md">Read full implementation blueprint ↗</a></div></section>
+<div class="studio-callout"><strong>Existing demo protection</strong>The Studio is a separate page and has its own namespaced browser storage. It does not read or write the existing POS/customer/store/driver app data. Its “Publish” action creates a local test snapshot only — no live app is connected.</div>
+<section class="page-section"><div class="section-heading"><div><h2>What an admin can configure</h2><p>The product is flexible through an approved registry of components and actions, not arbitrary code execution.</p></div></div>
+<div class="cards-grid">
+<div class="doc-card"><div class="card-icon">◈</div><h3>Design system</h3><p>Semantic colours, approved themes, typography scale, spacing/radius tokens, logo variants and contrast validation.</p></div>
+<div class="doc-card"><div class="card-icon">▤</div><h3>Page builder</h3><p>Add, hide, reorder and configure registered hero banners, category grids, product carousels, notices, shortcuts and summary cards.</p></div>
+<div class="doc-card"><div class="card-icon">☷</div><h3>Dynamic form builder</h3><p>Text, phone, email, numeric, dropdown, multi-select, switch, checkbox and date fields with schema versioning and validation.</p></div>
+<div class="doc-card"><div class="card-icon">▦</div><h3>Catalog & category manager</h3><p>Build category hierarchies, order them, connect products and decide on which supported surfaces categories appear.</p></div>
+<div class="doc-card"><div class="card-icon">⊞</div><h3>Module visibility</h3><p>Configure allowed navigation and feature visibility while keeping permissions, plan entitlements and data access enforced by the server.</p></div>
+<div class="doc-card"><div class="card-icon">↶</div><h3>Publish, version & rollback</h3><p>Drafts remain private; validated publish creates an immutable version, audit event and rollback path.</p></div>
+</div></section>
+<section class="page-section"><div class="section-heading"><div><h2>Target the right surface</h2><p>The config resolver must scope settings so one app or tenant never accidentally changes another.</p></div></div><div class="surface-grid">
+<div class="surface-card"><div class="emoji">🛍️</div><h3>Customer App</h3><p>Home sections, consumer catalog visibility, product cards and supported profile/checkout fields.</p></div>
+<div class="surface-card"><div class="emoji">🧾</div><h3>POS Terminal</h3><p>Quick actions, allowed extra fields, category shortcuts and layout density — never alter billing invariants.</p></div>
+<div class="surface-card"><div class="emoji">🏪</div><h3>Store App</h3><p>Order-list presentation, supported operational fields and allowed menu visibility.</p></div>
+<div class="surface-card"><div class="emoji">🛵</div><h3>Driver App</h3><p>Task-card fields, help content and supported checklist forms.</p></div>
+<div class="surface-card"><div class="emoji">📊</div><h3>Business Admin</h3><p>Dashboard widgets, navigation order, report shortcuts and tenant-owned forms.</p></div>
+<div class="surface-card"><div class="emoji">🛡️</div><h3>Super Admin</h3><p>Global templates and allowed plan capabilities; tenant data access remains separately permissioned and audited.</p></div>
+</div></section>
+<section class="page-section"><div class="section-heading"><div><h2>Safe change lifecycle</h2><p>A user-created draft never becomes live until the authoritative service validates and publishes it.</p></div></div>
+<div class="studio-flow">
+<div class="flow-step"><div class="num">1</div><h3>Draft</h3><p>Select tenant, store and target surface. Only editable draft state changes.</p></div>
+<div class="flow-step"><div class="num">2</div><h3>Validate</h3><p>Check schema, registered components, permissions, entitlements and app-version compatibility.</p></div>
+<div class="flow-step"><div class="num">3</div><h3>Preview & review</h3><p>Preview phone/tablet/desktop, review the diff and see affected surfaces.</p></div>
+<div class="flow-step"><div class="num">4</div><h3>Publish snapshot</h3><p>Persist an immutable version, audit log and outbox event in one transaction.</p></div>
+</div>
+<div class="studio-flow">
+<div class="flow-step"><div class="num">5</div><h3>Notify clients</h3><p>WebSocket/STOMP signals a new version; REST remains the source of truth.</p></div>
+<div class="flow-step"><div class="num">6</div><h3>Resolve runtime</h3><p>Clients fetch the authorized snapshot and use a compatible cached version offline.</p></div>
+<div class="flow-step"><div class="num">7</div><h3>Observe</h3><p>Track config version, render failures and schema compatibility without logging personal form values.</p></div>
+<div class="flow-step"><div class="num">8</div><h3>Rollback</h3><p>Publish a new release pointing to a known-good snapshot; keep audit history.</p></div>
+</div></section>
+<section class="page-section"><div class="section-heading"><div><h2>Architecture contract</h2><p>Production implementation target, not wired to this browser prototype.</p></div></div>
+<div class="diagram-board"><div class="architecture-stack">
+<div class="layer"><div class="layer-label">Admin configuration surfaces</div><div class="node-grid"><div class="node primary">Flutter Studio<small>Web / Desktop</small></div><div class="node">Preview renderer<small>Phone, tablet, desktop</small></div><div class="node">Draft editor<small>Forms, pages, tokens</small></div><div class="node">Publish console<small>Diff / rollback</small></div></div></div>
+<div class="diagram-arrow">↓ HTTPS · authenticated actor · scoped config requests</div>
+<div class="layer"><div class="layer-label">Spring Boot configuration module</div><div class="node-grid"><div class="node">Draft service<small>Optimistic concurrency</small></div><div class="node">Schema validator<small>JSON Schema + allowlist</small></div><div class="node">Version service<small>Publish / rollback</small></div><div class="node">Authorization<small>Tenant / role / plan</small></div></div></div>
+<div class="diagram-arrow">↓ atomic transaction · immutable snapshot + audit + outbox</div>
+<div class="layer"><div class="layer-label">Data + runtime distribution</div><div class="node-grid"><div class="node green">PostgreSQL<small>Versions and assignments</small></div><div class="node">Outbox / events<small>Notify after commit</small></div><div class="node">Flutter config runtime<small>Allowlisted renderers</small></div><div class="node">Last-known-good cache<small>Offline-compatible</small></div></div></div>
+</div></div></section>
+<section class="page-section"><div class="section-heading"><div><h2>Configuration must not become arbitrary code</h2><p>The component registry is the safety and maintainability boundary.</p></div></div>
+<table class="boundary-table"><thead><tr><th>Allowed through configuration</th><th>Requires engineering</th></tr></thead><tbody>
+<tr><td>Change supported text, colour tokens, section order, category visibility and approved fields.</td><td>New business operation, payment behaviour, domain rule or data-processing capability.</td></tr>
+<tr><td>Select registered action keys, approved routes, asset IDs and known data resources.</td><td>Arbitrary URL fetching, script/HTML execution, SQL or Dart/Java source injected by an admin.</td></tr>
+<tr><td>Enable an entitled module's presentation in an authorised surface.</td><td>Granting permissions, bypassing a subscription gate or accessing another tenant's data.</td></tr>
+<tr><td>Publish a schema version after compatibility validation.</td><td>Breaking stored form responses or old clients without a migration/compatibility plan.</td></tr>
+</tbody></table></section>
+<section class="page-section"><div class="section-heading"><div><h2>Roadmap after the demo</h2><p>Keep every stage isolated, feature-flagged and documented before moving to the next surface.</p></div></div>
+<div class="panel">
+<div class="stage"><div class="stage-num">01</div><div><h3>Sandbox prototype</h3><p>Standalone UI, namespaced local storage, surface preview, section/form/category/module editing and local snapshot history. No application integration.</p></div></div>
+<div class="stage"><div class="stage-num">02</div><div><h3>Contract and database</h3><p>Approve inheritance/scope rules, JSON schema registry, PostgreSQL migrations, immutable config versions and audit/outbox structure.</p></div></div>
+<div class="stage"><div class="stage-num">03</div><div><h3>Spring Boot API</h3><p>Implement draft/read/validate/publish/rollback endpoints with tenant authorization, optimistic concurrency, idempotency and security tests.</p></div></div>
+<div class="stage"><div class="stage-num">04</div><div><h3>Admin API adapter</h3><p>Swap sandbox repository for API-backed drafts behind a feature flag; do not change the existing runtime apps yet.</p></div></div>
+<div class="stage"><div class="stage-num">05</div><div><h3>First read-only runtime</h3><p>Integrate one surface first and render only approved components. Contract tests must prove other tenants and surfaces are unaffected.</p></div></div>
+<div class="stage"><div class="stage-num">06</div><div><h3>Forms and categories</h3><p>Add backend-validated form submissions, catalog visibility and compatibility/version migration rules.</p></div></div>
+<div class="stage"><div class="stage-num">07</div><div><h3>Offline POS and remaining apps</h3><p>Use last-known-good config in Drift cache, then roll out POS, Customer, Store, Driver and Admin with rollback drills.</p></div></div>
+</div></section>
+<section class="page-section"><div class="callout warning"><strong>Agent/developer guardrail</strong>Read the complete Markdown blueprint before implementation. For the sandbox milestone, work under <span class="inlinecode">studio/</span> plus approved documentation files only. Do not edit <span class="inlinecode">app.html</span>, root <span class="inlinecode">index.html</span>, <span class="inlinecode">apps/customer/</span>, <span class="inlinecode">apps/store/</span> or <span class="inlinecode">apps/driver/</span>. Report changed paths, tests actually run, and items that were not verified.</div><div class="studio-actions"><a class="primary" href="../studio/">Open isolated Configuration Studio ↗</a><a href="CONFIGURATION_STUDIO_BLUEPRINT.md">Full engineering blueprint ↗</a><a href="DEVELOPER_HANDOFF.md">General developer handoff ↗</a><a href="API_ARCHITECTURE.md">API architecture ↗</a></div></section>
+<footer class="doc-footer"><span>Vyavsetu · Configuration Studio blueprint</span><span><a href="index.html">Documentation home</a> · <a href="https://github.com/manjesh2024/vyavsetu">GitHub repository</a></span></footer>
+</main></div>
+</body></html>
