@@ -123,10 +123,20 @@ Production acceptance must additionally test: split screen, landscape, keyboard 
 - Hardware: print success/failure/retry, 58/80 mm layouts, Windows printer setup, cash drawer open only under allowed conditions.
 - Release: secrets review, dev/staging/prod config, migration plan, observability, backups and rollback.
 
-## 8. Configuration Studio — new product capability\n\nThe proposed Configuration Studio lets authorised admins configure supported page layouts, semantic design tokens, dynamic form schemas, category visibility, and module/navigation visibility by surface, tenant and store. Configuration uses a registered component/action allowlist; it must not execute arbitrary user-authored HTML, JavaScript, Dart, SQL or scripts. Backend permissions and plan entitlements remain authoritative.\n\n**Safety boundary:** the isolated browser prototype at `studio/index.html` stores only under `vyavsetu_studio_sandbox_v1`. Its local “publish” creates a sandbox snapshot only. Existing app screens, business logic and browser storage do not consume its data. Do not connect the Studio to live app surfaces until the versioned Spring Boot API, PostgreSQL schema, tenant/RBAC enforcement, audit/outbox, Flutter configuration adapter, compatibility checks and rollback process have been implemented and tested.\n\nRead the [full Configuration Studio product/engineering blueprint](CONFIGURATION_STUDIO_BLUEPRINT.md) and its [visual walkthrough](configuration-studio.html) before assigning work to a developer or coding agent. The blueprint includes target scopes, role matrix, component registry, form JSON contract, proposed API endpoints, data model, security constraints, offline POS behavior, acceptance criteria and phased implementation.\n\n## 9. Repository entry points
+## 8. Configuration Studio — new product capability
+
+The proposed Configuration Studio lets authorised admins configure supported page layouts, semantic design tokens, dynamic form schemas, category visibility, and module/navigation visibility by surface, tenant and store. Configuration uses a registered component/action allowlist; it must not execute arbitrary user-authored HTML, JavaScript, Dart, SQL or scripts. Backend permissions and plan entitlements remain authoritative.
+
+**Safety boundary:** the isolated browser prototype at `studio/index.html` stores only under `vyavsetu_studio_sandbox_v1`. Its local “publish” creates a sandbox snapshot only. Existing app screens, business logic and browser storage do not consume its data. Do not connect the Studio to live app surfaces until the versioned Spring Boot API, PostgreSQL schema, tenant/RBAC enforcement, audit/outbox, Flutter configuration adapter, compatibility checks and rollback process have been implemented and tested.
+
+Read the [full Configuration Studio product/engineering blueprint](CONFIGURATION_STUDIO_BLUEPRINT.md) and its [visual walkthrough](configuration-studio.html) before assigning work to a developer or coding agent. The blueprint includes target scopes, role matrix, component registry, form JSON contract, proposed API endpoints, data model, security constraints, offline POS behavior, acceptance criteria and phased implementation.
+
+## 9. Repository entry points
 
 - `index.html`: device/theme preview launcher.
-- `app.html`: interactive demo surfaces and Developer Access hub.\n- `studio/index.html`: isolated Configuration Studio sandbox; local-only and not integrated with current apps.\n- `docs/CONFIGURATION_STUDIO_BLUEPRINT.md` and `docs/configuration-studio.html`: full product/engineering spec and visual guide for the future configurable product layer.
+- `app.html`: interactive demo surfaces and Developer Access hub.
+- `studio/index.html`: isolated Configuration Studio sandbox; local-only and not integrated with current apps.
+- `docs/CONFIGURATION_STUDIO_BLUEPRINT.md` and `docs/configuration-studio.html`: full product/engineering spec and visual guide for the future configurable product layer.
 - `assets/`: logo assets.
 - `docs/ARCHITECTURE_FLOWCHARTS.md`: Mermaid source for the target workflows.
 - `docs/API_ARCHITECTURE.md` and `docs/api-architecture.html`: proposed REST endpoints, JSON contracts, current localStorage inventory, Drift/SQLite tables, PostgreSQL model and Spring Boot package design.
